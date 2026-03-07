@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard } from "lucide-react";
-import { formatIDR, COLORS } from "../lib/helpers";
+import { formatIDR, COLORS, getCategoryIcon } from "../lib/helpers";
 import type {
-  Transaction, ViewType, SourceStat, MonthlyTrendItem,
+  Transaction, ViewType, CategoryStat, MonthlyTrendItem,
   YearlyTrendItem, WeeklyTrendItem, MerchantStat, DayOfWeekStat,
 } from "../lib/types";
 import { TrendLineChart } from "../components/charts/TrendLineChart";
@@ -21,7 +20,7 @@ interface AnalyticsViewProps {
   yearlyTrend: YearlyTrendItem[];
   weeklyTrend: WeeklyTrendItem[];
   dayOfWeekStats: DayOfWeekStat[];
-  sourceStats: SourceStat[];
+  categoryStats: CategoryStat[];
   topMerchants: MerchantStat[];
   selectedMonth: string;
   setSelectedMonth: (ym: string) => void;
@@ -32,13 +31,13 @@ interface AnalyticsViewProps {
 export function AnalyticsView({
   monthTrx, monthDebit, monthCredit, avgDailySpend,
   monthlyTrend, yearlyTrend, weeklyTrend,
-  dayOfWeekStats, sourceStats, topMerchants,
+  dayOfWeekStats, categoryStats, topMerchants,
   selectedMonth, setSelectedMonth, setSelectedDay, setActiveView,
 }: AnalyticsViewProps) {
   const [chartTab, setChartTab] = useState<ChartTab>("monthly");
 
   const net = monthCredit - monthDebit;
-  const maxDow = Math.max(...dayOfWeekStats.map((d) => d.total), 1);
+  const maxDowAvg = Math.max(...dayOfWeekStats.map((d) => d.avg), 1);
   const maxMerchant = topMerchants[0]?.amount ?? 1;
 
   /* ── Yearly summary ── */
@@ -96,7 +95,7 @@ export function AnalyticsView({
           <p className="text-lg sm:text-xl font-bold text-white break-all">
             Rp {formatIDR(avgDailySpend)}
           </p>
-          <p className="text-[10px] text-zinc-600 mt-1">bulan ini</p>
+          <p className="text-[10px] text-zinc-600 mt-1">rata-rata harian bulan ini</p>
         </div>
 
         <div className="bg-[#18181B] border border-white/5 rounded-3xl p-4 sm:p-5">
@@ -179,9 +178,9 @@ export function AnalyticsView({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {/* Day of week */}
         <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5">
-          <h3 className="text-sm font-bold text-white mb-1">Pengeluaran per Hari dalam Seminggu</h3>
+          <h3 className="text-sm font-bold text-white mb-1">Rata-rata Pengeluaran per Hari</h3>
           <p className="text-[10px] text-zinc-500 mb-4">
-            Total pengeluaran berdasarkan hari, bulan ini
+            Rata-rata pengeluaran setiap Senin, Selasa, dst di bulan ini
           </p>
           <div className="space-y-2.5">
             {dayOfWeekStats.map((d, i) => (
@@ -190,46 +189,57 @@ export function AnalyticsView({
                 <div className="flex-1 h-2 bg-[#0E0E12] rounded-full overflow-hidden">
                   <div
                     className="h-full bg-blue-500/70 rounded-full transition-all duration-700"
-                    style={{ width: `${maxDow > 0 ? (d.total / maxDow) * 100 : 0}%` }}
+                    style={{ width: `${maxDowAvg > 0 ? (d.avg / maxDowAvg) * 100 : 0}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-zinc-400 shrink-0 w-20 text-right">
-                  {d.total > 0 ? formatIDR(d.total) : "—"}
-                </span>
+                <div className="flex flex-col items-end shrink-0">
+                  <span className="text-[10px] text-zinc-400 w-20 text-right">
+                    {d.avg > 0 ? formatIDR(d.avg) : "—"}
+                  </span>
+                  <span className="text-[8px] text-zinc-600 w-20 text-right">
+                    {d.count}x &middot; total {d.total > 0 ? formatIDR(d.total) : "0"}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Source breakdown */}
+        {/* Category breakdown */}
         <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5">
-          <h3 className="text-sm font-bold text-white mb-4">Sumber Dana</h3>
-          {sourceStats.length === 0 ? (
+          <h3 className="text-sm font-bold text-white mb-1">Kategori Terbesar</h3>
+          <p className="text-[10px] text-zinc-500 mb-4">
+            Komposisi pengeluaran bulan ini per kategori
+          </p>
+          {categoryStats.length === 0 ? (
             <p className="text-xs text-zinc-600 text-center py-8">Belum ada data</p>
           ) : (
-            <div className="space-y-2.5">
-              {sourceStats.map((src, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-3 bg-[#0E0E12] rounded-2xl"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400">
-                      <CreditCard size={13} />
+            <div className="space-y-3">
+              {categoryStats.slice(0, 5).map((cat, i) => {
+                const Icon = getCategoryIcon(cat.name);
+                return (
+                  <div key={i}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-lg ${cat.color} flex items-center justify-center`}>
+                          <Icon size={12} className="text-white" />
+                        </div>
+                        <span className="text-xs font-bold text-white">{cat.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-zinc-400">{cat.percentage}%</span>
+                        <span className="text-xs font-bold text-white">{formatIDR(cat.amount)}</span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-white">{src.name}</p>
-                      <p className="text-[9px] text-zinc-600">{src.count} transaksi</p>
+                    <div className="h-1.5 bg-[#0E0E12] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${cat.color}`}
+                        style={{ width: `${cat.percentage}%` }}
+                      />
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-white">{formatIDR(src.debit)}</p>
-                    {src.credit > 0 && (
-                      <p className="text-[9px] text-emerald-500">+{formatIDR(src.credit)}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -241,7 +251,7 @@ export function AnalyticsView({
           <h3 className="text-sm font-bold text-white">
             Top Merchant
             <span className="ml-2 text-[10px] font-normal text-zinc-500">
-              bulan ini berdasarkan total pengeluaran
+              berdasarkan total pengeluaran
             </span>
           </h3>
         </div>

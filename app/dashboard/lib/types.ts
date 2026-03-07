@@ -57,6 +57,8 @@ export interface MerchantStat {
 export interface DayOfWeekStat {
   label: string;
   total: number;
+  count: number;
+  avg: number;
 }
 
 export interface NavItem {

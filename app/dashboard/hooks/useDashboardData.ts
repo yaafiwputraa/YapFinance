@@ -157,17 +157,33 @@ export function useDashboardData({
     return Math.round(monthDebit / currentDay);
   }, [monthDebit, selectedMonth]);
 
-  const dayOfWeekStats = useMemo(() => {
+  const dayOfWeekStats = useMemo((): DayOfWeekStat[] => {
     const labels = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
     const totals = Array(7).fill(0) as number[];
+    const counts = Array(7).fill(0) as number[];
+
+    // Count how many times each day-of-week appears in the month
+    const [yr, mo] = selectedMonth.split("-").map(Number);
+    const daysInMonth = new Date(yr, mo, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dow = new Date(yr, mo - 1, d).getDay();
+      counts[dow]++;
+    }
+
     monthTrx
       .filter((t) => t.type === "DEBIT" && t.transaction_date)
       .forEach((t) => {
         const dow = new Date(t.transaction_date!).getDay();
         totals[dow] += Number(t.amount);
       });
-    return labels.map((label, i) => ({ label, total: totals[i] }));
-  }, [monthTrx]);
+
+    return labels.map((label, i) => ({
+      label,
+      total: totals[i],
+      count: counts[i],
+      avg: counts[i] > 0 ? Math.round(totals[i] / counts[i]) : 0,
+    }));
+  }, [monthTrx, selectedMonth]);
 
   const topMerchants = useMemo((): MerchantStat[] => {
     const map: Record<string, number> = {};
@@ -182,7 +198,7 @@ export function useDashboardData({
   }, [monthTrx]);
 
   const filteredTrx = useMemo(() => {
-    const base = activeView === "transactions" ? initialTransactions : monthTrx;
+    const base = monthTrx;
     if (!searchQuery.trim()) return base;
     const q = searchQuery.toLowerCase();
     return base.filter(
@@ -191,7 +207,7 @@ export function useDashboardData({
         (t.category || "").toLowerCase().includes(q) ||
         (t.source || "").toLowerCase().includes(q)
     );
-  }, [monthTrx, initialTransactions, searchQuery, activeView]);
+  }, [monthTrx, searchQuery]);
 
   const chartData = useMemo(() => {
     const [yr, mo] = selectedMonth.split("-").map(Number);

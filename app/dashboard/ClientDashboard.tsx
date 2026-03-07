@@ -280,7 +280,7 @@ export default function ClientDashboard({
                 yearlyTrend={yearlyTrend}
                 weeklyTrend={weeklyTrend}
                 dayOfWeekStats={dayOfWeekStats}
-                sourceStats={sourceStats}
+                categoryStats={categoryStats}
                 topMerchants={topMerchants}
                 selectedMonth={selectedMonth}
                 setSelectedMonth={setSelectedMonth}

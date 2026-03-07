@@ -21,15 +21,17 @@ Extract the transaction details and return ONLY a valid JSON object — no expla
 
 The JSON must have exactly these fields:
 {
-  "date": "<ISO8601 datetime string, use Asia/Jakarta timezone +07:00>",
-  "amount": <number, always positive, no dots/commas>,
-  "type": "<DEBIT or KREDIT>",
+  "date": "<ISO8601 datetime string, use Asia/Jakarta timezone +07:00 — guess from context if not explicit>",
+  "amount": <number, always positive, no dots/commas — e.g. 50000 not "50.000,00">,
+  "type": "<DEBIT or KREDIT — DEBIT means money went out, KREDIT means money came in>",
   "merchant": "<merchant or recipient name, as specific as possible>",
   "category": "<one of: Food & Beverage, Transportation, Shopping, Bills & Utilities, Transfer, Top-up, ATM Withdrawal, Other>"
 }
 
 Rules:
-- If you cannot determine a field, use a sensible default (e.g. "Other" for category, current date for date).
+- amount must be a plain number (integer or decimal), never a string.
+- type is KREDIT if the email says "transaksi masuk" or "pengembalian dana", otherwise DEBIT.
+- For Top-up (e.g. GOPAY TOP UP, GoPay), category = "Top-up", type = DEBIT.
 - Do NOT include any text outside the JSON object.`;
 
 /**

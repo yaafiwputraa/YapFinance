@@ -61,7 +61,12 @@ export async function GET(request: NextRequest) {
         const bodyText = extractTextBody((fullMsg.data.payload ?? {}) as any);
         const snippet = fullMsg.data.snippet ?? "";
 
-        console.log(`[Sync] Processing ID: ${messageId} | Snippet: ${snippet}`);
+        // Use Gmail's internalDate as the authoritative transaction date
+        const gmailDate = fullMsg.data.internalDate
+          ? new Date(Number(fullMsg.data.internalDate)).toISOString()
+          : null;
+
+        console.log(`[Sync] Processing ID: ${messageId} | Date: ${gmailDate} | Snippet: ${snippet}`);
 
         if (!bodyText) {
           errors.push(`${messageId}: empty body`);
@@ -72,11 +77,11 @@ export async function GET(request: NextRequest) {
         // Parse with DeepSeek
         const parsed = await parseEmailWithAI(bodyText);
 
-        // Insert into Supabase
+        // Insert into Supabase — use Gmail date as authoritative, fall back to AI-parsed date
         const { error: insertError } = await supabase
           .from("transactions")
           .insert({
-            transaction_date: parsed.date,
+            transaction_date: gmailDate ?? parsed.date,
             amount: parsed.amount,
             type: parsed.type,
             source: "BLU",

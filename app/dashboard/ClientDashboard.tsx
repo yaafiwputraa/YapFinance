@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  Plus, Search, ArrowUpRight, Sparkles, Command, X, Layers, Activity, 
-  Settings, CreditCard, Wallet, Coffee, Car, ShoppingCart, Zap, 
-  PanelLeftClose, PanelLeftOpen, LogOut, ArrowDownRight, RefreshCw, Loader2
+import {
+  Plus, Search, Sparkles, Command, X, Layers, Activity,
+  Settings, CreditCard, Wallet, Coffee, Car, ShoppingCart, Zap,
+  PanelLeftClose, PanelLeftOpen, LogOut, RefreshCw, Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -113,18 +113,18 @@ function AddTransactionModal({ isOpen, onClose, onSuccess }: { isOpen: boolean, 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}></div>
       
-      <div className="relative bg-[#0E0E12] border border-white/10 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 zoom-in-95 duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]">
-        <div className="flex justify-between items-center p-6 border-b border-white/5">
+      <div className="relative bg-[#0E0E12] border border-white/10 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[95dvh]">
+        <div className="flex justify-between items-center p-5 border-b border-white/5 shrink-0">
           <h2 className="text-xl font-bold text-white tracking-tight">Catat Manual</h2>
           <button onClick={onClose} className="text-zinc-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition-all">
             <X size={18} />
           </button>
         </div>
         
-        <div className="p-6 space-y-6">
+        <div className="p-5 space-y-5 overflow-y-auto flex-1">
           <div className="group">
             <div className="flex justify-between mb-2">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest group-focus-within:text-blue-500 transition-colors">Nominal</label>
@@ -190,7 +190,7 @@ function AddTransactionModal({ isOpen, onClose, onSuccess }: { isOpen: boolean, 
           </div>
         </div>
 
-        <div className="p-6 pt-2">
+        <div className="p-5 pt-3 shrink-0">
           <button 
             onClick={handleSubmit} 
             disabled={loading || !formData.amount}
@@ -218,6 +218,7 @@ export default function ClientDashboard({
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeNav, setActiveNav] = useState("Overview");
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   
@@ -258,11 +259,48 @@ export default function ClientDashboard({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: fontStyles }} />
-      
-      <div className="flex h-screen bg-[#000000] p-3 gap-3 overflow-hidden selection:bg-blue-500/30">
-        <aside 
-          className={`relative h-full bg-[#0E0E12] border border-white/10 rounded-[28px] flex flex-col transition-[width] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden shadow-2xl z-20 ${
-            isSidebarCollapsed ? "w-[80px]" : "w-[280px]"
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 inset-x-0 z-[50] md:hidden bg-[#0E0E12]/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 pb-safe">
+        {([
+          { icon: Activity, label: "Overview" },
+          { icon: Layers, label: "Transaksi" },
+        ] as const).map((item) => (
+          <button key={item.label} onClick={() => setActiveNav(item.label)}
+            className="flex flex-col items-center gap-1 py-3 px-4 flex-1">
+            <item.icon size={22} className={activeNav === item.label ? "text-blue-500" : "text-zinc-500"}
+              strokeWidth={activeNav === item.label ? 2.5 : 2} />
+            <span className={`text-[10px] font-semibold ${activeNav === item.label ? "text-blue-400" : "text-zinc-500"}`}>
+              {item.label}
+            </span>
+          </button>
+        ))}
+
+        {/* Center add button */}
+        <button onClick={() => setIsModalOpen(true)}
+          className="-mt-5 w-14 h-14 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all active:scale-95 shrink-0">
+          <Plus size={26} className="text-white" />
+        </button>
+
+        {([
+          { icon: Search, label: "AI" },
+          { icon: Settings, label: "Pengaturan" },
+        ] as const).map((item) => (
+          <button key={item.label} onClick={() => setActiveNav(item.label)}
+            className="flex flex-col items-center gap-1 py-3 px-4 flex-1">
+            <item.icon size={22} className={activeNav === item.label ? "text-blue-500" : "text-zinc-500"}
+              strokeWidth={activeNav === item.label ? 2.5 : 2} />
+            <span className={`text-[10px] font-semibold ${activeNav === item.label ? "text-blue-400" : "text-zinc-500"}`}>
+              {item.label}
+            </span>
+          </button>
+        ))}
+      </nav>
+
+      <div className="flex h-[100dvh] bg-[#000000] md:p-3 md:gap-3 overflow-hidden selection:bg-blue-500/30">
+        <aside
+          className={`hidden md:flex relative h-full bg-[#0E0E12] border border-white/10 rounded-[28px] flex-col transition-[width] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden shadow-2xl z-20 ${
+            isSidebarCollapsed ? "w-[80px]" : "w-[260px]"
           }`}
         >
           <div className="flex items-center justify-between p-5 h-20 shrink-0">
@@ -329,34 +367,32 @@ export default function ClientDashboard({
           </div>
         </aside>
 
-        <main className="flex-1 relative bg-[#0E0E12] border border-white/10 rounded-[28px] overflow-y-auto shadow-2xl z-10 flex flex-col">
+        <main className="flex-1 relative bg-[#0E0E12] border border-white/10 md:rounded-[28px] overflow-y-auto shadow-2xl z-10 flex flex-col">
           <div className="absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-blue-900/10 to-transparent pointer-events-none z-0 rounded-t-[28px]"></div>
 
-          <div className="p-8 lg:p-12 max-w-[1400px] mx-auto w-full min-h-full flex flex-col space-y-8 relative z-10">
-            <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div>
-                <h2 className="text-3xl font-bold text-white tracking-tight">Financial Overview</h2>
-                <div className="flex gap-3 mt-1 items-center">
-                  <p className="text-sm font-medium text-zinc-400 capitalize">{monthName}</p>
+          <div className="p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 lg:pb-10 max-w-[1400px] mx-auto w-full min-h-full flex flex-col gap-6 sm:gap-8 relative z-10">
+            <header className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight truncate">Financial Overview</h2>
+                  <p className="text-xs sm:text-sm font-medium text-zinc-400 mt-0.5 capitalize">{monthName}</p>
                 </div>
               </div>
 
-              <div className="flex gap-4 items-center w-full lg:w-auto">
-                <div className="relative w-full lg:w-[350px]">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                    <Sparkles size={18} className="text-blue-500" />
-                  </div>
-                  <input 
-                    type="text" 
-                    placeholder="Tanya AI: Berapa pengeluaran?" 
-                    className="w-full bg-[#18181B] border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.03] transition-all"
+              <div className="flex gap-2 items-center shrink-0">
+                <div className="relative hidden sm:block w-[180px] lg:w-[280px]">
+                  <Sparkles size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" />
+                  <input
+                    type="text"
+                    placeholder="Tanya AI…"
+                    className="w-full bg-[#18181B] border border-white/5 rounded-xl py-2.5 pl-9 pr-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/50 transition-all"
                   />
                 </div>
-                
-                <button 
+
+                <button
                   onClick={handleSync}
                   disabled={syncing}
-                  className="bg-[#18181B] border border-white/5 hover:border-blue-500/30 rounded-2xl p-3 text-zinc-400 hover:text-white transition-all flex items-center justify-center shrink-0 group relative"
+                  className="p-2.5 bg-[#18181B] border border-white/5 hover:border-blue-500/30 rounded-xl text-zinc-400 hover:text-white transition-all flex items-center justify-center relative"
                   title="Sync Emails"
                 >
                   <RefreshCw size={20} className={syncing ? "animate-spin text-blue-500" : "group-hover:text-blue-400"} />
@@ -369,7 +405,7 @@ export default function ClientDashboard({
               </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="bg-[#18181B] border border-white/5 rounded-3xl p-6 lg:p-8 flex flex-col justify-between">
                 <div className="flex justify-between items-start mb-6">
                   <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-400">
@@ -378,9 +414,9 @@ export default function ClientDashboard({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-zinc-400 mb-1">Total Pengeluaran</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-bold text-zinc-500">Rp</span>
-                    <h3 className="text-4xl font-bold text-white tracking-tight">{formatIDR(monthTotalDebit)}</h3>
+                  <div className="flex items-baseline gap-1 flex-wrap">
+                    <span className="text-base font-bold text-zinc-500">Rp</span>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight break-all">{formatIDR(monthTotalDebit)}</h3>
                   </div>
                 </div>
               </div>
@@ -393,26 +429,28 @@ export default function ClientDashboard({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-zinc-400 mb-1">Total Pemasukkan</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-bold text-zinc-500">Rp</span>
-                    <h3 className="text-4xl font-bold text-white tracking-tight">{formatIDR(monthTotalCredit)}</h3>
+                  <div className="flex items-baseline gap-1 flex-wrap">
+                    <span className="text-base font-bold text-zinc-500">Rp</span>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight break-all">{formatIDR(monthTotalCredit)}</h3>
                   </div>
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-500 border border-blue-400/20 rounded-3xl p-6 lg:p-8 flex flex-col items-center justify-center text-white transition-all group shadow-[0_0_30px_rgba(37,99,235,0.15)] hover:shadow-[0_0_40px_rgba(37,99,235,0.3)]"
+                className="sm:col-span-2 lg:col-span-1 bg-blue-600 hover:bg-blue-500 border border-blue-400/20 rounded-3xl p-5 sm:p-6 flex items-center gap-4 lg:flex-col lg:justify-center lg:gap-3 text-white transition-all group shadow-[0_0_30px_rgba(37,99,235,0.15)] hover:shadow-[0_0_40px_rgba(37,99,235,0.3)]"
               >
-                <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Plus size={28} />
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <Plus size={24} />
                 </div>
-                <span className="font-bold text-xl">Catat Manual</span>
-                <span className="text-sm text-blue-200 mt-1 font-medium">Input Cepat Transaksi</span>
+                <div className="lg:text-center">
+                  <p className="font-bold text-lg leading-tight">Catat Manual</p>
+                  <p className="text-xs text-blue-200 mt-0.5">Input Cepat Transaksi</p>
+                </div>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 flex-1">
               <div className="xl:col-span-2 bg-[#18181B] border border-white/5 rounded-3xl p-6 lg:p-8 flex flex-col">
                 <div className="flex justify-between items-center mb-8">
                   <h3 className="text-lg font-bold text-white">Aktivitas Terkini</h3>
@@ -426,13 +464,13 @@ export default function ClientDashboard({
                     const IconComp = getCategoryIcon(trx.category);
                     const tDate = formatDate(trx.transaction_date);
                     return (
-                    <div key={trx.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/[0.03] border border-transparent hover:border-white/5 transition-all group">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-[#0E0E12] border border-white/5 flex items-center justify-center text-zinc-400">
-                          <IconComp size={20} />
+                    <div key={trx.id} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/[0.03] border border-transparent hover:border-white/5 transition-all group">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#0E0E12] border border-white/5 flex items-center justify-center text-zinc-400 shrink-0">
+                          <IconComp size={18} />
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-white group-hover:text-blue-400 transition-colors uppercase">{trx.merchant_name || "TRANSAKSI"}</h4>
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-white group-hover:text-blue-400 transition-colors uppercase truncate text-sm">{trx.merchant_name || "TRANSAKSI"}</h4>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs text-zinc-500 font-medium">{tDate}</span>
                             <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
@@ -449,11 +487,9 @@ export default function ClientDashboard({
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <p className={`font-bold text-base ${trx.type === "DEBIT" ? "text-white" : "text-emerald-400"}`}>
-                          {trx.type === "DEBIT" ? "-" : "+"} {formatIDR(trx.amount)}
-                        </p>
-                      </div>
+                      <p className={`font-bold text-sm shrink-0 ${trx.type === "DEBIT" ? "text-white" : "text-emerald-400"}`}>
+                        {trx.type === "DEBIT" ? "−" : "+"}&nbsp;{formatIDR(trx.amount)}
+                      </p>
                     </div>
                   )})}
                 </div>

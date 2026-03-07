@@ -77,7 +77,8 @@ export default function ClientDashboard({
   const {
     monthTrx, monthDebit, monthCredit,
     categoryStats, allCategories, sourceStats,
-    monthlyTrend, avgDailySpend, dayOfWeekStats,
+    monthlyTrend, yearlyTrend, weeklyTrend,
+    avgDailySpend, dayOfWeekStats,
     topMerchants, filteredTrx, chartData,
   } = useDashboardData({ initialTransactions, selectedMonth, searchQuery, activeView, budgets });
 
@@ -276,6 +277,8 @@ export default function ClientDashboard({
                 monthCredit={monthCredit}
                 avgDailySpend={avgDailySpend}
                 monthlyTrend={monthlyTrend}
+                yearlyTrend={yearlyTrend}
+                weeklyTrend={weeklyTrend}
                 dayOfWeekStats={dayOfWeekStats}
                 sourceStats={sourceStats}
                 topMerchants={topMerchants}

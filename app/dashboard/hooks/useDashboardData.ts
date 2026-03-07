@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import type {
   Transaction, ViewType, CategoryStat, SourceStat,
-  MonthlyTrendItem, MerchantStat, DayOfWeekStat,
+  MonthlyTrendItem, YearlyTrendItem, WeeklyTrendItem,
+  MerchantStat, DayOfWeekStat,
 } from "../lib/types";
 import { COLORS, toYYYYMM, monthLabel, shiftMonth } from "../lib/helpers";
 
@@ -21,6 +22,8 @@ interface DashboardData {
   allCategories: string[];
   sourceStats: SourceStat[];
   monthlyTrend: MonthlyTrendItem[];
+  yearlyTrend: YearlyTrendItem[];
+  weeklyTrend: WeeklyTrendItem[];
   avgDailySpend: number;
   dayOfWeekStats: DayOfWeekStat[];
   topMerchants: MerchantStat[];
@@ -97,9 +100,54 @@ export function useDashboardData({
       const debit = trxs
         .filter((t) => t.type === "DEBIT")
         .reduce((s, t) => s + Number(t.amount), 0);
-      return { ym, label: monthLabel(ym), debit };
+      const credit = trxs
+        .filter((t) => t.type === "KREDIT")
+        .reduce((s, t) => s + Number(t.amount), 0);
+      return { ym, label: monthLabel(ym), debit, credit };
     });
   }, [initialTransactions]);
+
+  const yearlyTrend = useMemo((): YearlyTrendItem[] => {
+    const currentYear = today.getFullYear();
+    return Array.from({ length: 5 }, (_, i) => {
+      const year = currentYear - 4 + i;
+      const prefix = `${year}-`;
+      const trxs = initialTransactions.filter((t) => t.transaction_date?.startsWith(prefix));
+      const debit = trxs.filter((t) => t.type === "DEBIT").reduce((s, t) => s + Number(t.amount), 0);
+      const credit = trxs.filter((t) => t.type === "KREDIT").reduce((s, t) => s + Number(t.amount), 0);
+      return { year, label: String(year), debit, credit };
+    });
+  }, [initialTransactions]);
+
+  const weeklyTrend = useMemo((): WeeklyTrendItem[] => {
+    const [yr, mo] = selectedMonth.split("-").map(Number);
+    const daysInMonth = new Date(yr, mo, 0).getDate();
+    const weeks: WeeklyTrendItem[] = [];
+    let weekStart = 1;
+    let weekNum = 1;
+    while (weekStart <= daysInMonth) {
+      const weekEnd = Math.min(weekStart + 6, daysInMonth);
+      let debit = 0;
+      let credit = 0;
+      monthTrx.forEach((t) => {
+        if (!t.transaction_date) return;
+        const day = new Date(t.transaction_date).getDate();
+        if (day >= weekStart && day <= weekEnd) {
+          if (t.type === "DEBIT") debit += Number(t.amount);
+          else credit += Number(t.amount);
+        }
+      });
+      weeks.push({
+        week: weekNum,
+        label: `W${weekNum} (${weekStart}-${weekEnd})`,
+        debit,
+        credit,
+      });
+      weekStart = weekEnd + 1;
+      weekNum++;
+    }
+    return weeks;
+  }, [monthTrx, selectedMonth]);
 
   const avgDailySpend = useMemo(() => {
     if (monthDebit === 0) return 0;
@@ -161,7 +209,8 @@ export function useDashboardData({
   return {
     monthTrx, monthDebit, monthCredit,
     categoryStats, allCategories, sourceStats,
-    monthlyTrend, avgDailySpend, dayOfWeekStats,
+    monthlyTrend, yearlyTrend, weeklyTrend,
+    avgDailySpend, dayOfWeekStats,
     topMerchants, filteredTrx, chartData,
   };
 }

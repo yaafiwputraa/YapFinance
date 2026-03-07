@@ -32,6 +32,21 @@ export interface MonthlyTrendItem {
   ym: string;
   label: string;
   debit: number;
+  credit: number;
+}
+
+export interface YearlyTrendItem {
+  year: number;
+  label: string;
+  debit: number;
+  credit: number;
+}
+
+export interface WeeklyTrendItem {
+  week: number;
+  label: string;
+  debit: number;
+  credit: number;
 }
 
 export interface MerchantStat {

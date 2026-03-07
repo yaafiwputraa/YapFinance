@@ -16,7 +16,7 @@ export function TransactionsView({
   onEdit, onDelete, deletingId,
 }: TransactionsViewProps) {
   return (
-    <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5 sm:p-6 flex flex-col min-h-[400px]">
+    <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5 sm:p-6 flex flex-col min-h-[400px]">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-white">
           {searchQuery ? `"${searchQuery}"` : "Semua Transaksi"}

@@ -88,7 +88,7 @@ export function AnalyticsView({
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-[#18181B] border border-white/5 rounded-3xl p-4 sm:p-5">
+        <div className="bg-[#18181B] border border-white/5 rounded-2xl p-4 sm:p-5">
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
             Avg / Hari
           </p>
@@ -98,7 +98,7 @@ export function AnalyticsView({
           <p className="text-[10px] text-zinc-600 mt-1">rata-rata harian bulan ini</p>
         </div>
 
-        <div className="bg-[#18181B] border border-white/5 rounded-3xl p-4 sm:p-5">
+        <div className="bg-[#18181B] border border-white/5 rounded-2xl p-4 sm:p-5">
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
             Net Balance
           </p>
@@ -110,7 +110,7 @@ export function AnalyticsView({
           </p>
         </div>
 
-        <div className="bg-[#18181B] border border-white/5 rounded-3xl p-4 sm:p-5">
+        <div className="bg-[#18181B] border border-white/5 rounded-2xl p-4 sm:p-5">
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
             Tahun Ini
           </p>
@@ -124,7 +124,7 @@ export function AnalyticsView({
           )}
         </div>
 
-        <div className="bg-[#18181B] border border-white/5 rounded-3xl p-4 sm:p-5">
+        <div className="bg-[#18181B] border border-white/5 rounded-2xl p-4 sm:p-5">
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
             Total Transaksi
           </p>
@@ -134,7 +134,7 @@ export function AnalyticsView({
       </div>
 
       {/* ── Trend line chart with tabs ── */}
-      <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5 sm:p-6">
+      <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5 sm:p-6">
         <div className="flex items-center justify-between mb-1">
           <div>
             <h3 className="text-sm font-bold text-white">Pengeluaran vs Pemasukan</h3>
@@ -177,7 +177,7 @@ export function AnalyticsView({
       {/* ── Day of week + Source breakdown ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {/* Day of week */}
-        <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5">
+        <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5">
           <h3 className="text-sm font-bold text-white mb-1">Rata-rata Pengeluaran per Hari</h3>
           <p className="text-[10px] text-zinc-500 mb-4">
             Rata-rata pengeluaran setiap Senin, Selasa, dst di bulan ini
@@ -206,7 +206,7 @@ export function AnalyticsView({
         </div>
 
         {/* Category breakdown */}
-        <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5">
+        <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5">
           <h3 className="text-sm font-bold text-white mb-1">Kategori Terbesar</h3>
           <p className="text-[10px] text-zinc-500 mb-4">
             Komposisi pengeluaran bulan ini per kategori
@@ -246,7 +246,7 @@ export function AnalyticsView({
       </div>
 
       {/* ── Top merchants ── */}
-      <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5 sm:p-6">
+      <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5 sm:p-6">
         <div className="mb-4">
           <h3 className="text-sm font-bold text-white">
             Top Merchant

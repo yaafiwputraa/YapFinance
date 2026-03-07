@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import {
@@ -182,7 +182,7 @@ export default function ClientDashboard({
         />
 
         {/* Main panel */}
-        <main className="flex-1 relative bg-[#0E0E12] border border-white/10 md:rounded-[28px] overflow-y-auto shadow-2xl z-10 flex flex-col min-w-0">
+        <main className="flex-1 relative bg-[#0E0E12] border border-white/10 md:rounded-2xl overflow-y-auto shadow-2xl z-10 flex flex-col min-w-0">
           {/* Background glow */}
           <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-blue-600/20 via-blue-900/5 to-transparent pointer-events-none z-0" />
           <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-blue-500/20 blur-[120px] rounded-full pointer-events-none z-0" />

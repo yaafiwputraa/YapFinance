@@ -37,7 +37,7 @@ export function OverviewView({
     <>
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5 sm:p-6 flex flex-col gap-4">
+        <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
           <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-zinc-400">
             <Activity size={18} />
           </div>
@@ -52,7 +52,7 @@ export function OverviewView({
           </div>
         </div>
 
-        <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5 sm:p-6 flex flex-col gap-4">
+        <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
           <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-zinc-400">
             <Wallet size={18} />
           </div>
@@ -69,7 +69,7 @@ export function OverviewView({
 
         <button
           onClick={() => setIsAddOpen(true)}
-          className="sm:col-span-2 lg:col-span-1 bg-blue-600 hover:bg-blue-500 border border-blue-400/20 rounded-3xl p-5 sm:p-6 flex items-center gap-4 lg:flex-col lg:justify-center lg:gap-3 text-white transition-all shadow-[0_0_30px_rgba(37,99,235,0.15)] hover:shadow-[0_0_40px_rgba(37,99,235,0.3)] group"
+          className="sm:col-span-2 lg:col-span-1 bg-blue-600 hover:bg-blue-500 border border-blue-400/20 rounded-2xl p-5 sm:p-6 flex items-center gap-4 lg:flex-col lg:justify-center lg:gap-3 text-white transition-all shadow-[0_0_30px_rgba(37,99,235,0.15)] hover:shadow-[0_0_40px_rgba(37,99,235,0.3)] group"
         >
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
             <Plus size={24} />
@@ -85,7 +85,7 @@ export function OverviewView({
         {/* Left: Chart + Activity */}
         <div className="xl:col-span-2 flex flex-col gap-4 sm:gap-6">
           {/* Daily chart */}
-          <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5 sm:p-6">
+          <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <BarChart3 size={15} className="text-blue-500" />
@@ -115,7 +115,7 @@ export function OverviewView({
           </div>
 
           {/* Activity list */}
-          <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5 sm:p-6 flex flex-col">
+          <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5 sm:p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-white">
                 {selectedDay ? `Transaksi Hari ke-${selectedDay}` : "Aktivitas Terkini"}
@@ -154,7 +154,7 @@ export function OverviewView({
         </div>
 
         {/* Right: Category breakdown */}
-        <div className="bg-[#18181B] border border-white/5 rounded-3xl p-5 sm:p-6">
+        <div className="bg-[#18181B] border border-white/5 rounded-2xl p-5 sm:p-6">
           <h3 className="text-sm font-bold text-white mb-5">Breakdown Kategori</h3>
           <div className="space-y-4">
             {categoryStats.length === 0 ? (

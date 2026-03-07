@@ -1,4 +1,4 @@
-import { Coffee, Car, ShoppingCart, Zap } from "lucide-react";
+import { Coffee, Car, ShoppingCart, Zap, Dumbbell, Gamepad2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /* ── Constants ─────────────────────────────────────────────── */
@@ -17,6 +17,8 @@ export const CATEGORIES = [
   "Transportasi",
   "Belanja",
   "Tagihan",
+  "Sports",
+  "Game",
   "Lainnya",
 ];
 
@@ -88,5 +90,9 @@ export function getCategoryIcon(category?: string | null): LucideIcon {
     return ShoppingCart;
   if (c.includes("tagihan") || c.includes("listrik") || c.includes("pln") || c.includes("internet"))
     return Zap;
+  if (c.includes("sport") || c.includes("gym") || c.includes("olahraga") || c.includes("fitness"))
+    return Dumbbell;
+  if (c.includes("game") || c.includes("gaming") || c.includes("steam") || c.includes("playstation"))
+    return Gamepad2;
   return Zap;
 }

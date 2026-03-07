@@ -14,7 +14,7 @@ export function Sidebar({
 }: SidebarProps) {
   return (
     <aside
-      className={`hidden md:flex relative h-full bg-[#0E0E12] border border-white/10 rounded-[28px] flex-col transition-[width] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden shadow-2xl z-20 ${
+      className={`hidden md:flex relative h-full bg-[#0E0E12] border border-white/10 rounded-2xl flex-col transition-[width] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden shadow-2xl z-20 ${
         isCollapsed ? "w-[80px]" : "w-[260px]"
       }`}
     >

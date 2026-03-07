@@ -29,7 +29,7 @@ export function BudgetView({
           const isOver = budget > 0 && spent > budget;
 
           return (
-            <div key={cat} className="bg-[#18181B] border border-white/5 rounded-3xl p-5">
+            <div key={cat} className="bg-[#18181B] border border-white/5 rounded-2xl p-5">
               {/* Header */}
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400 shrink-0">

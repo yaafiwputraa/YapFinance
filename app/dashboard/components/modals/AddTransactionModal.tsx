@@ -56,7 +56,7 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess }: AddTransacti
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[#0E0E12] border border-white/10 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[95dvh]">
+      <div className="relative bg-[#0E0E12] border border-white/10 w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[95dvh]">
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b border-white/5 shrink-0">
           <h2 className="text-lg font-bold text-white">Catat Manual</h2>

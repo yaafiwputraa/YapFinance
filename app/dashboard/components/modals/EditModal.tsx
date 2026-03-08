@@ -13,10 +13,14 @@ interface EditModalProps {
 
 export function EditModal({ trx, onClose, onSuccess }: EditModalProps) {
   const [loading, setLoading] = useState(false);
+  const initialCategory = trx.category || "Lainnya";
+  const categoryOptions = CATEGORIES.includes(initialCategory)
+    ? CATEGORIES
+    : [initialCategory, ...CATEGORIES];
   const [form, setForm] = useState({
     amount: String(trx.amount),
     merchant_name: trx.merchant_name || "",
-    category: trx.category || "Lainnya",
+    category: initialCategory,
     source: trx.source || "CASH",
     type: trx.type || "DEBIT",
   });
@@ -112,7 +116,7 @@ export function EditModal({ trx, onClose, onSuccess }: EditModalProps) {
                 onChange={(e) => set("category", e.target.value)}
                 className="w-full bg-[#18181B] border border-white/5 rounded-xl px-3 py-3 text-sm font-medium text-white appearance-none focus:outline-none cursor-pointer"
               >
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                {categoryOptions.map((c) => <option key={c}>{c}</option>)}
               </select>
             </div>
             <div>

@@ -55,6 +55,7 @@ export default function ClientDashboard({
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(() => today.getFullYear());
   const monthPickerRef = useRef<HTMLDivElement>(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   /* ── Effects ── */
   useEffect(() => {
@@ -94,7 +95,7 @@ export default function ClientDashboard({
     monthlyTrend, yearlyTrend, weeklyTrend,
     avgDailySpend, dayOfWeekStats,
     topMerchants, filteredTrx, chartData,
-  } = useDashboardData({ initialTransactions, selectedMonth, searchQuery, activeView, budgets });
+  } = useDashboardData({ initialTransactions, selectedMonth, searchQuery, selectedCategory, activeView, budgets });
 
   /* ── Actions ── */
   async function handleSync() {
@@ -245,7 +246,7 @@ export default function ClientDashboard({
                             <button
                               key={ym}
                               disabled={isFuture}
-                              onClick={() => { setSelectedMonth(ym); setSelectedDay(null); setIsMonthPickerOpen(false); }}
+                              onClick={() => { setSelectedMonth(ym); setSelectedDay(null); setSelectedCategory(""); setIsMonthPickerOpen(false); }}
                               className={`py-2 rounded-xl text-xs font-semibold transition-all ${
                                 isCurrent
                                   ? "bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.5)]"
@@ -318,6 +319,9 @@ export default function ClientDashboard({
                 filteredTrx={filteredTrx}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={(cat) => { setSelectedCategory(cat); setSelectedDay(null); }}
+                availableCategories={allCategories}
                 {...sharedTrxActions}
               />
             )}

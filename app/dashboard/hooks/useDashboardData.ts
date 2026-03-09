@@ -10,6 +10,7 @@ interface Params {
   initialTransactions: Transaction[];
   selectedMonth: string;
   searchQuery: string;
+  selectedCategory: string;
   activeView: ViewType;
   budgets: Record<string, number>;
 }
@@ -35,6 +36,7 @@ export function useDashboardData({
   initialTransactions,
   selectedMonth,
   searchQuery,
+  selectedCategory,
   activeView,
   budgets,
 }: Params): DashboardData {
@@ -74,10 +76,10 @@ export function useDashboardData({
   }, [monthTrx, budgets]);
 
   const allCategories = useMemo(() => {
-    const cats = new Set(["Food & Beverage", "Transportasi", "Belanja", "Tagihan", "Lainnya"]);
-    initialTransactions.forEach((t) => cats.add(t.category || "Lainnya"));
-    return Array.from(cats);
-  }, [initialTransactions]);
+    const cats = new Set<string>();
+    monthTrx.forEach((t) => { if (t.category) cats.add(t.category); });
+    return Array.from(cats).sort();
+  }, [monthTrx]);
 
   const sourceStats = useMemo((): SourceStat[] => {
     const map: Record<string, { debit: number; credit: number; count: number }> = {};
@@ -198,7 +200,8 @@ export function useDashboardData({
   }, [monthTrx]);
 
   const filteredTrx = useMemo(() => {
-    const base = monthTrx;
+    let base = monthTrx;
+    if (selectedCategory) base = base.filter((t) => t.category === selectedCategory);
     if (!searchQuery.trim()) return base;
     const q = searchQuery.toLowerCase();
     return base.filter(
@@ -207,7 +210,7 @@ export function useDashboardData({
         (t.category || "").toLowerCase().includes(q) ||
         (t.source || "").toLowerCase().includes(q)
     );
-  }, [monthTrx, searchQuery]);
+  }, [monthTrx, searchQuery, selectedCategory]);
 
   const chartData = useMemo(() => {
     const [yr, mo] = selectedMonth.split("-").map(Number);

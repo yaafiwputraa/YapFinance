@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm ci --omit=optional",
   "crons": [
     {
       "path": "/api/cron/sync-emails",

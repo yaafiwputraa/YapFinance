@@ -1,121 +1,182 @@
-Siapp, ini versi **README.md** yang jauh lebih komprehensif. Gue tambahin detail mekanisme kerja (How it Works), fitur-fitur spesifik per modul, serta penjelasan alur teknis yang lebih "daging" biar kalau orang baca repo lu, mereka langsung paham ini proyek serius.
+# YapBalance
 
-Gue kasih nama **DeepYap** sebagai opsi utama ya (keren buat portofolio).
+A personal finance tracker that automatically reads bank notification emails and turns them into structured transaction data using an LLM. Built as a solution to the lack of public APIs from Indonesian digital banks.
 
 ---
 
-# 💸 DeepYap: AI-Powered Hybrid Finance Tracker
+## Problem
 
-**DeepYap** adalah aplikasi pengelola keuangan personal yang menggabungkan otomatisasi tingkat tinggi melalui AI dan fleksibilitas pencatatan manual. Proyek ini hadir sebagai solusi atas absennya API publik dari institusi perbankan digital di Indonesia.
+1. **No public API.** Digital banks like Blu BCA and e-wallets like GoPay do not expose APIs for individual users.
+2. **Regex is fragile.** Scraping emails with regex breaks the moment the bank changes their email template.
+3. **Manual tracking fails.** Logging every transaction by hand is tedious and gets abandoned quickly.
 
-## 🚨 Problem Statement
+## Solution
 
-1. **No Public API:** Bank digital seperti Blu BCA dan dompet digital seperti GoPay tidak menyediakan akses API untuk pengguna individu, sehingga sinkronisasi otomatis sangat sulit dilakukan.
-2. **Regex Fragility:** Metode konvensional seperti *scraping* email menggunakan Regular Expression (Regex) sangat mudah rusak jika bank melakukan sedikit saja perubahan desain pada template email notifikasi.
-3. **Manual Fatigue:** Pencatatan manual 100% sering kali terhenti di tengah jalan karena pengguna lupa atau malas menginput transaksi harian.
+YapBalance uses a hybrid approach:
 
-## 💡 Proposed Solution
+- **AI-based parsing.** Instead of regex, raw email text is sent to DeepSeek V3. As long as the amount and merchant are somewhere in the email, the model will find them regardless of template changes.
+- **Manual entry fallback.** A fast input form for transactions that do not generate email notifications, such as GoPay or cash payments.
 
-DeepYap menggunakan pendekatan **Hybrid Ingestion**:
+---
 
-* **LLM-Based Parsing:** Menggantikan Regex yang kaku dengan **DeepSeek V3/R1** untuk memahami konteks teks email secara cerdas. Selama informasi nominal dan merchant ada di dalam email, LLM akan menemukannya terlepas dari perubahan desain email.
-* **Smart Manual Input:** Antarmuka intuitif untuk mencatat transaksi yang tidak terekam di email (seperti GoPay atau uang tunai).
+## Features
 
-## 🚀 Key Features
+### Automatic Email Sync
 
-### 1. Automated Email Ingestion (The "Auto" Core)
+- Reads Gmail inbox for bank notification emails from Blu BCA using Gmail API (OAuth2 with a long-lived refresh token).
+- Deduplicates using Gmail `Message-ID` so the same email is never counted twice.
+- Runs automatically once per day via Vercel Cron. Can also be triggered manually from the dashboard.
 
-* **Smart Cron Job:** Sistem akan mengecek inbox Gmail secara berkala (misal 3 jam sekali) melalui Google Cloud Service.
-* **Deduplication Logic:** Menggunakan `Message-ID` Gmail sebagai *unique identifier* untuk memastikan satu email tidak akan pernah tercatat dua kali di database.
-* **Multi-Format Support:** Mendukung berbagai format email transaksi (Transfer, QRIS, Tarik Tunai, Top-up).
+### Manual Entry
 
-### 2. Manual Entry with "Predictive Fill"
+- Simple form for logging transactions that do not generate emails.
+- Supports source tagging: Blu, GoPay, or Cash.
 
-* **Lightning Fast Form:** Form input manual yang didesain untuk selesai dalam <5 detik.
-* **Category Suggestion:** Jika kamu mengetik "Gojek", sistem akan otomatis menyarankan kategori "Transportasi" berdasarkan data historis.
+### Dashboard
 
-### 3. Financial Insights Dashboard
+![Overview Dashboard](/public/overview.png)
 
-* **Spending Breakdown:** Visualisasi pengeluaran berdasarkan kategori (Food, Transport, Bills, etc) menggunakan *chart* interaktif.
-* **Source Tracking:** Membandingkan pengeluaran antara saldo Blu vs GoPay vs Tunai.
+- Monthly spending overview with daily bar chart.
+- Category breakdown for the selected month.
 
-### 4. Future: AI Financial Assistant (Text-to-SQL)
+### Transactions
 
-* Fitur *chat* di mana kamu bisa bertanya: *"Berapa pengeluaran kopi gue minggu ini?"* dan sistem akan melakukan *query* otomatis ke database.
+![Transactions List](/public/transaksi.png)
 
-## 🛠️ Tech Stack
+- Transactions list with search and category filter chips.
 
-| Layer | Tech | Reason |
-| --- | --- | --- |
-| **Frontend** | Next.js 14+ (App Router) | SEO-friendly, fast, and modern React framework. |
-| **Styling** | Tailwind CSS & shadcn/ui | Clean, accessible, and professional UI components. |
-| **Database** | Supabase (PostgreSQL) | Reliable, free-tier friendly, and great developer experience. |
-| **AI Engine** | DeepSeek LLM | Cost-efficient and robust for structured data extraction. |
-| **Email Access** | Gmail API (OAuth2) | Secure access to read transaction notifications. |
-| **Automation** | Vercel Cron Jobs | Simple way to trigger serverless functions on a schedule. |
+### Analytics
 
-## 🏗️ How It Works: Technical Deep Dive
+![Analytics View](/public/analytics.png)
 
-### A. Alur Otomatisasi (The Ingestion Pipeline)
+- Analytics view: monthly trend, weekly trend, day-of-week pattern, top merchants.
 
-1. **Trigger:** Vercel Cron memanggil endpoint `/api/cron/fetch-emails`.
-2. **Fetch:** Backend Next.js melakukan request ke Gmail API mencari email dengan query `from:halo@blubca.id after:[last_check_date]`.
-3. **Analyze:** Body email yang berisi teks mentah dikirim ke **DeepSeek LLM** dengan *system prompt* khusus.
-4. **Transform:** DeepSeek mengembalikan objek JSON bersih:
+### Budgeting
+
+![Budget Tracking](/public/budget.png)
+
+- Budget tracking per category with progress bars.
+- Month/year picker — jump directly to any month without clicking through one by one.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15 (App Router) |
+| Styling | Tailwind CSS |
+| Database | Supabase (PostgreSQL) |
+| AI Engine | DeepSeek V3 via OpenAI-compatible SDK |
+| Email Access | Gmail API (OAuth2) |
+| Deployment | Vercel (with Cron Jobs) |
+
+---
+
+## How It Works
+
+### Automatic Ingestion Pipeline
+
+1. Vercel Cron triggers `GET /api/cron/sync-emails` once per day.
+2. The server calls Gmail API and fetches up to 50 emails matching `from:receipts@blubybcadigital.id`.
+3. For each unseen email, the raw text body is extracted and sent to DeepSeek with a structured system prompt.
+4. DeepSeek returns a clean JSON object:
+
 ```json
 {
-  "date": "2026-03-05T14:30:00Z",
+  "date": "2026-03-05T14:30:00+07:00",
   "amount": 50000,
   "type": "DEBIT",
   "merchant": "Kopi Kenangan",
   "category": "Food & Beverage"
 }
-
 ```
 
+5. The result is inserted into the `transactions` table in Supabase with `entry_method: AUTO_EMAIL`.
 
-5. **Load:** Data tersebut disimpan ke tabel `transactions` di Supabase.
+### Manual Entry Flow
 
-### B. Alur Manual
+1. User fills the form in the dashboard.
+2. Data is posted to `POST /api/transactions/manual`.
+3. Saved with `entry_method: MANUAL`.
 
-1. User menginput transaksi via Dashboard.
-2. Form mengirim data ke endpoint `/api/transactions/manual`.
-3. Data disimpan dengan label `entry_method: MANUAL`.
+---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ```sql
 CREATE TABLE transactions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   transaction_date TIMESTAMP WITH TIME ZONE NOT NULL,
-  amount DECIMAL(12, 2) NOT NULL,
-  type VARCHAR(10) CHECK (type IN ('DEBIT', 'KREDIT')),
-  source VARCHAR(50) NOT NULL, -- 'BLU', 'GOPAY', 'CASH'
-  merchant_name TEXT,
-  category VARCHAR(100),
-  entry_method VARCHAR(20) DEFAULT 'MANUAL', -- 'AUTO_EMAIL' or 'MANUAL'
-  message_id TEXT UNIQUE, -- Gmail Message ID for de-duplication
-  raw_snippet TEXT -- For debugging parsing errors
+  amount          DECIMAL(12, 2) NOT NULL,
+  type            VARCHAR(10) CHECK (type IN ('DEBIT', 'KREDIT')),
+  source          VARCHAR(50) NOT NULL,     -- 'BLU', 'GOPAY', 'CASH'
+  merchant_name   TEXT,
+  category        VARCHAR(100),
+  entry_method    VARCHAR(20) DEFAULT 'MANUAL', -- 'AUTO_EMAIL' or 'MANUAL'
+  message_id      TEXT UNIQUE,              -- Gmail Message-ID for deduplication
+  raw_snippet     TEXT                      -- Raw email snippet for debugging
 );
-
 ```
 
-## 🗺️ Roadmap & Progress
+---
 
-* [ ] **Phase 1: Foundation** (Setup Supabase & Next.js Boilerplate)
-* [ ] **Phase 2: The Ingestion Brain** (Gmail API + DeepSeek Integration)
-* [ ] **Phase 3: The Dashboard** (shadcn/ui Charts & Manual Form)
-* [ ] **Phase 4: Optimization** (Cron Jobs & Production Deployment)
+## Categories
+
+Transactions are classified into the following categories (used by both the AI parser and the manual entry form):
+
+- Food & Beverage
+- Transportation
+- Shopping
+- Bills & Utilities
+- Transfer
+- Top-up
+- ATM Withdrawal
+- Sports
+- Game
+- Other
 
 ---
 
-### Ingin Berkontribusi?
+## Environment Variables
 
-Silakan buka *issue* atau lakukan *pull request*. Proyek ini dikembangkan oleh **Yap** sebagai solusi finansial cerdas berbasis AI.
+| Variable | Description |
+|---|---|
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-only) |
+| `GOOGLE_CLIENT_ID` | OAuth2 Client ID from Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | OAuth2 Client Secret |
+| `GOOGLE_REDIRECT_URI` | Authorized redirect URI (must match Google Cloud Console) |
+| `GOOGLE_REFRESH_TOKEN` | Long-lived refresh token obtained via OAuth flow |
+| `DEEPSEEK_API_KEY` | API key from platform.deepseek.com |
+| `CRON_SECRET` | Random secret to protect the cron endpoint |
+| `NEXT_PUBLIC_CRON_SECRET` | Same value as `CRON_SECRET` — exposed to the client for the manual sync button |
+
+See `.env.local.example` for a filled-out template, and `DEPLOYMENT.md` for the full deployment guide.
 
 ---
 
-Gimana? Ini sudah lengkap banget dari sisi latar belakang, teknis, sampai struktur database-nya. Lu tinggal isi file `README.md` lu pake teks ini.
+## Local Development
 
-Mau gue bantu buatin **System Prompt** spesifik buat DeepSeek-nya supaya hasil JSON-nya nggak pernah meleset?
+```bash
+# Install dependencies
+npm install --legacy-peer-deps
+
+# Copy environment file and fill in your values
+cp .env.local.example .env.local
+
+# Run development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+To get your `GOOGLE_REFRESH_TOKEN`, visit `http://localhost:3000/api/auth/gmail/start` once after setting up your Google OAuth credentials.
+
+---
+
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete step-by-step guide to deploying on Vercel.
+

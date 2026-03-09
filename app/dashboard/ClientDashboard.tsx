@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
-  Search, RefreshCw, ChevronLeft, ChevronRight,
-  Activity, Layers, BarChart3, Target,
+  Search, RefreshCw,
+  Activity, Layers, BarChart3, Target, CalendarDays, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { fontStyles, monthLabel, shiftMonth, toYYYYMM } from "./lib/helpers";
+import { fontStyles, monthLabel, toYYYYMM } from "./lib/helpers";
 import type { Transaction, ViewType, NavItem } from "./lib/types";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { Sidebar } from "./components/layout/Sidebar";
@@ -52,6 +52,9 @@ export default function ClientDashboard({
   const [budgets, setBudgets] = useState<Record<string, number>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [budgetInputs, setBudgetInputs] = useState<Record<string, string>>({});
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(() => today.getFullYear());
+  const monthPickerRef = useRef<HTMLDivElement>(null);
 
   /* ── Effects ── */
   useEffect(() => {
@@ -66,6 +69,17 @@ export default function ClientDashboard({
       }
     } catch {}
   }, []);
+
+  // Close month picker on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (monthPickerRef.current && !monthPickerRef.current.contains(e.target as Node)) {
+        setIsMonthPickerOpen(false);
+      }
+    }
+    if (isMonthPickerOpen) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [isMonthPickerOpen]);
 
   useEffect(() => {
     const id = setInterval(handleSyncSilent, 30 * 60 * 1000);
@@ -142,8 +156,6 @@ export default function ClientDashboard({
     try { localStorage.setItem("yb_budgets", JSON.stringify(updated)); } catch {}
   }
 
-  const canGoNext = shiftMonth(selectedMonth, 1) <= toYYYYMM(today);
-
   /* ── Shared action helpers (passed to row/views) ── */
   const sharedTrxActions = {
     onEdit: setEditingTrx,
@@ -192,25 +204,65 @@ export default function ClientDashboard({
             {/* ── Header ── */}
             <header className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <div className="flex items-center gap-1">
+                {/* Month/Year Picker */}
+                <div className="relative" ref={monthPickerRef}>
                   <button
-                    onClick={() => { setSelectedMonth(shiftMonth(selectedMonth, -1)); setSelectedDay(null); }}
-                    className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/10 transition-all shrink-0"
+                    onClick={() => { setIsMonthPickerOpen((o) => !o); setPickerYear(Number(selectedMonth.split("-")[0])); }}
+                    className="flex items-center gap-2 group"
                   >
-                    <ChevronLeft size={18} />
+                    <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white tracking-tight capitalize group-hover:text-blue-400 transition-colors">
+                      {monthLabel(selectedMonth)}
+                    </h2>
+                    <CalendarDays size={18} className="text-zinc-500 group-hover:text-blue-400 transition-colors mt-0.5 shrink-0" />
                   </button>
-                  <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white tracking-tight truncate capitalize">
-                    {monthLabel(selectedMonth)}
-                  </h2>
-                  <button
-                    onClick={() => { setSelectedMonth(shiftMonth(selectedMonth, 1)); setSelectedDay(null); }}
-                    disabled={!canGoNext}
-                    className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/10 transition-all shrink-0 disabled:opacity-20 disabled:pointer-events-none"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
+
+                  {isMonthPickerOpen && (
+                    <div className="absolute top-full left-0 mt-2 z-50 bg-[#18181B] border border-white/10 rounded-2xl p-4 shadow-2xl w-[280px]">
+                      {/* Year row */}
+                      <div className="flex items-center justify-between mb-3">
+                        <button
+                          onClick={() => setPickerYear((y) => y - 1)}
+                          className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-all"
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        <span className="text-sm font-bold text-white">{pickerYear}</span>
+                        <button
+                          onClick={() => setPickerYear((y) => y + 1)}
+                          disabled={pickerYear >= today.getFullYear()}
+                          className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-20 disabled:pointer-events-none"
+                        >
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+                      {/* Month grid */}
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((label, i) => {
+                          const ym = `${pickerYear}-${String(i + 1).padStart(2, "0")}`;
+                          const isCurrent = ym === selectedMonth;
+                          const isFuture = ym > toYYYYMM(today);
+                          return (
+                            <button
+                              key={ym}
+                              disabled={isFuture}
+                              onClick={() => { setSelectedMonth(ym); setSelectedDay(null); setIsMonthPickerOpen(false); }}
+                              className={`py-2 rounded-xl text-xs font-semibold transition-all ${
+                                isCurrent
+                                  ? "bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.5)]"
+                                  : isFuture
+                                  ? "text-zinc-700 cursor-not-allowed"
+                                  : "text-zinc-400 hover:bg-white/10 hover:text-white"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <p className="text-[10px] text-zinc-500 mt-0.5 ml-9">
+                <p className="text-[10px] text-zinc-500 mt-0.5">
                   {subtitleMap[activeView]}
                 </p>
               </div>

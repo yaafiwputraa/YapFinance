@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getGmailClient, extractTextBody } from "@/lib/gmail";
 import { parseEmailWithAI } from "@/lib/deepseek";
 
+// Vercel max function duration (seconds). Pro plan allows up to 300.
+// Hobby plan max is 60. Increase if you process many emails at once.
+export const maxDuration = 60;
+
 // Only Blu BCA transaction emails for now.
 // Add more senders here as needed, e.g. "OR dari:noreply@gopay.co.id"
 const GMAIL_QUERY = "from:receipts@blubybcadigital.id";

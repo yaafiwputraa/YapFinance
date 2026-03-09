@@ -11,6 +11,8 @@ const CATEGORIES = [
   "Transfer",
   "Top-up",
   "ATM Withdrawal",
+  "Sports",
+  "Game",
   "Other",
 ];
 

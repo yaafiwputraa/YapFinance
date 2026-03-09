@@ -1,4 +1,4 @@
-import { Coffee, Car, ShoppingCart, Zap, Dumbbell, Gamepad2 } from "lucide-react";
+import { Coffee, Car, ShoppingCart, Zap, Dumbbell, Gamepad2, ArrowLeftRight, Wallet, Landmark, HelpCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /* ── Constants ─────────────────────────────────────────────── */
@@ -14,12 +14,15 @@ export const COLORS = [
 
 export const CATEGORIES = [
   "Food & Beverage",
-  "Transportasi",
-  "Belanja",
-  "Tagihan",
+  "Transportation",
+  "Shopping",
+  "Bills & Utilities",
+  "Transfer",
+  "Top-up",
+  "ATM Withdrawal",
   "Sports",
   "Game",
-  "Lainnya",
+  "Other",
 ];
 
 export const SOURCES = [
@@ -86,13 +89,19 @@ export function getCategoryIcon(category?: string | null): LucideIcon {
     return Coffee;
   if (c.includes("transport") || c.includes("gojek") || c.includes("grab"))
     return Car;
-  if (c.includes("belanja") || c.includes("shopping"))
+  if (c.includes("shopping") || c.includes("belanja"))
     return ShoppingCart;
-  if (c.includes("tagihan") || c.includes("listrik") || c.includes("pln") || c.includes("internet"))
+  if (c.includes("bills") || c.includes("utilities") || c.includes("tagihan") || c.includes("listrik") || c.includes("internet"))
     return Zap;
+  if (c.includes("transfer"))
+    return ArrowLeftRight;
+  if (c.includes("top-up") || c.includes("topup") || c.includes("top up"))
+    return Wallet;
+  if (c.includes("atm") || c.includes("withdrawal") || c.includes("tarik"))
+    return Landmark;
   if (c.includes("sport") || c.includes("gym") || c.includes("olahraga") || c.includes("fitness"))
     return Dumbbell;
   if (c.includes("game") || c.includes("gaming") || c.includes("steam") || c.includes("playstation"))
     return Gamepad2;
-  return Zap;
+  return HelpCircle;
 }

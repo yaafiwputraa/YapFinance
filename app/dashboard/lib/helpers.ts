@@ -31,19 +31,6 @@ export const SOURCES = [
   { value: "BLU", label: "Blu" },
 ];
 
-/* ── Font / global CSS injection ──────────────────────────── */
-
-export const fontStyles = `
-  @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
-  :root { --font-jakarta: "Plus Jakarta Sans", sans-serif; }
-  body { font-family: var(--font-jakarta); background-color: #000000; color: #FAFAFA; }
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; }
-  *:hover::-webkit-scrollbar-thumb { background: #27272A; }
-  ::-webkit-scrollbar-thumb:hover { background: #3F3F46; }
-`;
-
 /* ── Formatters ────────────────────────────────────────────── */
 
 export const formatIDR = (n: number) =>

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { fontStyles, monthLabel, toYYYYMM } from "./lib/helpers";
+import { monthLabel, toYYYYMM } from "./lib/helpers";
 import type { Transaction, ViewType, NavItem } from "./lib/types";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { Sidebar } from "./components/layout/Sidebar";
@@ -174,8 +174,6 @@ export default function ClientDashboard({
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: fontStyles }} />
-
       {/* Mobile bottom navigation */}
       <BottomNav
         navItems={NAV_ITEMS}

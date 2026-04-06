@@ -55,5 +55,14 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-jakarta), sans-serif;
+    background-color: #000000;
+    color: #FAFAFA;
   }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; }
+  *:hover::-webkit-scrollbar-thumb { background: #27272A; }
+  ::-webkit-scrollbar-thumb:hover { background: #3F3F46; }
 }

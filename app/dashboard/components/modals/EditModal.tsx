@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Check, Loader2 } from "lucide-react";
 import { CATEGORIES, SOURCES } from "../../lib/helpers";
 import type { Transaction } from "../../lib/types";
@@ -25,6 +25,12 @@ export function EditModal({ trx, onClose, onSuccess }: EditModalProps) {
     type: trx.type || "DEBIT",
   });
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
   async function handleSave() {
     setLoading(true);

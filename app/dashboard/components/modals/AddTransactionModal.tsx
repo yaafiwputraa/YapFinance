@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { CATEGORIES, SOURCES } from "../../lib/helpers";
 
@@ -25,6 +25,13 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess }: AddTransacti
     type: "DEBIT",
     transaction_date: toLocalDatetimeValue(new Date()),
   });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

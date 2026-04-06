@@ -10,6 +10,11 @@ interface AddTransactionModalProps {
   onSuccess: () => void;
 }
 
+function toLocalDatetimeValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function AddTransactionModal({ isOpen, onClose, onSuccess }: AddTransactionModalProps) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -18,6 +23,7 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess }: AddTransacti
     category: "Other",
     source: "CASH",
     type: "DEBIT",
+    transaction_date: toLocalDatetimeValue(new Date()),
   });
 
   if (!isOpen) return null;
@@ -36,13 +42,20 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess }: AddTransacti
           category: form.category,
           source: form.source,
           type: form.type,
-          transaction_date: new Date().toISOString(),
+          transaction_date: new Date(form.transaction_date).toISOString(),
         }),
       });
       if (res.ok) {
         onSuccess();
         onClose();
-        setForm({ amount: "", merchant_name: "", category: "Other", source: "CASH", type: "DEBIT" });
+        setForm({
+          amount: "",
+          merchant_name: "",
+          category: "Other",
+          source: "CASH",
+          type: "DEBIT",
+          transaction_date: toLocalDatetimeValue(new Date()),
+        });
       } else {
         alert("Gagal menyimpan transaksi");
       }
@@ -137,6 +150,20 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess }: AddTransacti
                 {SOURCES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5 block">
+              Tanggal &amp; Waktu
+            </label>
+            <input
+              type="datetime-local"
+              value={form.transaction_date}
+              max={toLocalDatetimeValue(new Date())}
+              onChange={(e) => set("transaction_date", e.target.value)}
+              className="w-full bg-[#18181B] border border-white/5 focus:border-blue-500/50 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none transition-all [color-scheme:dark]"
+            />
           </div>
         </div>
 

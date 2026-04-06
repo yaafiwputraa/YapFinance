@@ -28,6 +28,8 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess }: AddTransacti
 
   useEffect(() => {
     if (!isOpen) return;
+    // Reset date to current time each time the modal opens
+    setForm((prev) => ({ ...prev, transaction_date: toLocalDatetimeValue(new Date()) }));
     const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);

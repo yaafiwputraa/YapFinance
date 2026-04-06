@@ -4,7 +4,7 @@ import type {
   MonthlyTrendItem, YearlyTrendItem, WeeklyTrendItem,
   MerchantStat, DayOfWeekStat,
 } from "../lib/types";
-import { COLORS, toYYYYMM, monthLabel, shiftMonth } from "../lib/helpers";
+import { CATEGORIES, COLORS, toYYYYMM, monthLabel, shiftMonth } from "../lib/helpers";
 
 interface Params {
   initialTransactions: Transaction[];
@@ -20,7 +20,10 @@ interface DashboardData {
   monthDebit: number;
   monthCredit: number;
   categoryStats: CategoryStat[];
+  /** Categories present in the selected month — used for filter chips */
   allCategories: string[];
+  /** All known categories (CATEGORIES constant + any unlisted ones) — used for Budget view */
+  budgetCategories: string[];
   sourceStats: SourceStat[];
   monthlyTrend: MonthlyTrendItem[];
   yearlyTrend: YearlyTrendItem[];
@@ -80,6 +83,16 @@ export function useDashboardData({
     monthTrx.forEach((t) => { if (t.category) cats.add(t.category); });
     return Array.from(cats).sort();
   }, [monthTrx]);
+
+  // All categories that should be manageable in Budget view:
+  // start with the full CATEGORIES list, then append any unlisted ones from all transactions.
+  const budgetCategories = useMemo(() => {
+    const extra = new Set<string>();
+    initialTransactions.forEach((t) => {
+      if (t.category && !CATEGORIES.includes(t.category)) extra.add(t.category);
+    });
+    return [...CATEGORIES, ...Array.from(extra).sort()];
+  }, [initialTransactions]);
 
   const sourceStats = useMemo((): SourceStat[] => {
     const map: Record<string, { debit: number; credit: number; count: number }> = {};
@@ -227,7 +240,7 @@ export function useDashboardData({
 
   return {
     monthTrx, monthDebit, monthCredit,
-    categoryStats, allCategories, sourceStats,
+    categoryStats, allCategories, budgetCategories, sourceStats,
     monthlyTrend, yearlyTrend, weeklyTrend,
     avgDailySpend, dayOfWeekStats,
     topMerchants, filteredTrx, chartData,

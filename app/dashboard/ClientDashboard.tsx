@@ -91,7 +91,7 @@ export default function ClientDashboard({
   /* ── Derived data ── */
   const {
     monthTrx, monthDebit, monthCredit,
-    categoryStats, allCategories, sourceStats,
+    categoryStats, allCategories, budgetCategories, sourceStats,
     monthlyTrend, yearlyTrend, weeklyTrend,
     avgDailySpend, dayOfWeekStats,
     topMerchants, filteredTrx, chartData,
@@ -347,7 +347,7 @@ export default function ClientDashboard({
 
             {activeView === "budget" && (
               <BudgetView
-                allCategories={allCategories}
+                allCategories={budgetCategories}
                 categoryStats={categoryStats}
                 budgets={budgets}
                 budgetInputs={budgetInputs}

@@ -15,7 +15,7 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess }: AddTransacti
   const [form, setForm] = useState({
     amount: "",
     merchant_name: "",
-    category: "Lainnya",
+    category: "Other",
     source: "CASH",
     type: "DEBIT",
   });
@@ -42,7 +42,7 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess }: AddTransacti
       if (res.ok) {
         onSuccess();
         onClose();
-        setForm({ amount: "", merchant_name: "", category: "Lainnya", source: "CASH", type: "DEBIT" });
+        setForm({ amount: "", merchant_name: "", category: "Other", source: "CASH", type: "DEBIT" });
       } else {
         alert("Gagal menyimpan transaksi");
       }

@@ -60,7 +60,7 @@ export function useDashboardData({
   const categoryStats = useMemo((): CategoryStat[] => {
     const map: Record<string, number> = {};
     monthTrx.filter((t) => t.type === "DEBIT").forEach((t) => {
-      const k = t.category || "Lainnya";
+      const k = t.category || "Other";
       map[k] = (map[k] || 0) + Number(t.amount);
     });
     const total = Object.values(map).reduce((s, v) => s + v, 0);

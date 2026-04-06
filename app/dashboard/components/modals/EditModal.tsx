@@ -13,7 +13,7 @@ interface EditModalProps {
 
 export function EditModal({ trx, onClose, onSuccess }: EditModalProps) {
   const [loading, setLoading] = useState(false);
-  const initialCategory = trx.category || "Lainnya";
+  const initialCategory = trx.category || "Other";
   const categoryOptions = CATEGORIES.includes(initialCategory)
     ? CATEGORIES
     : [initialCategory, ...CATEGORIES];

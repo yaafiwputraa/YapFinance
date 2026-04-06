@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 import type {
-  Transaction, ViewType, CategoryStat, SourceStat,
+  Transaction, CategoryStat,
   MonthlyTrendItem, YearlyTrendItem, WeeklyTrendItem,
   MerchantStat, DayOfWeekStat,
 } from "../lib/types";
@@ -11,7 +11,6 @@ interface Params {
   selectedMonth: string;
   searchQuery: string;
   selectedCategory: string;
-  activeView: ViewType;
   budgets: Record<string, number>;
 }
 
@@ -24,7 +23,6 @@ interface DashboardData {
   allCategories: string[];
   /** All known categories (CATEGORIES constant + any unlisted ones) — used for Budget view */
   budgetCategories: string[];
-  sourceStats: SourceStat[];
   monthlyTrend: MonthlyTrendItem[];
   yearlyTrend: YearlyTrendItem[];
   weeklyTrend: WeeklyTrendItem[];
@@ -40,7 +38,6 @@ export function useDashboardData({
   selectedMonth,
   searchQuery,
   selectedCategory,
-  activeView,
   budgets,
 }: Params): DashboardData {
   // Stable reference: captured once on mount, only changes at midnight via the interval in ClientDashboard.
@@ -94,20 +91,6 @@ export function useDashboardData({
       if (t.category && !CATEGORIES.includes(t.category)) extra.add(t.category);
     });
     return [...CATEGORIES, ...Array.from(extra).sort()];
-  }, [initialTransactions]);
-
-  const sourceStats = useMemo((): SourceStat[] => {
-    const map: Record<string, { debit: number; credit: number; count: number }> = {};
-    initialTransactions.forEach((t) => {
-      const k = t.source || "MANUAL";
-      if (!map[k]) map[k] = { debit: 0, credit: 0, count: 0 };
-      if (t.type === "DEBIT") map[k].debit += Number(t.amount);
-      else map[k].credit += Number(t.amount);
-      map[k].count++;
-    });
-    return Object.entries(map)
-      .sort((a, b) => (b[1].debit + b[1].credit) - (a[1].debit + a[1].credit))
-      .map(([name, v]) => ({ name, ...v }));
   }, [initialTransactions]);
 
   const monthlyTrend = useMemo((): MonthlyTrendItem[] => {
@@ -242,7 +225,7 @@ export function useDashboardData({
 
   return {
     monthTrx, monthDebit, monthCredit,
-    categoryStats, allCategories, budgetCategories, sourceStats,
+    categoryStats, allCategories, budgetCategories,
     monthlyTrend, yearlyTrend, weeklyTrend,
     avgDailySpend, dayOfWeekStats,
     topMerchants, filteredTrx, chartData,

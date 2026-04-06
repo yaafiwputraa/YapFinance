@@ -21,12 +21,6 @@ export interface CategoryStat {
   budget: number;
 }
 
-export interface SourceStat {
-  name: string;
-  debit: number;
-  credit: number;
-  count: number;
-}
 
 export interface MonthlyTrendItem {
   ym: string;

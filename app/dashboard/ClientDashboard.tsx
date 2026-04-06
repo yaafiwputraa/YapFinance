@@ -91,11 +91,11 @@ export default function ClientDashboard({
   /* ── Derived data ── */
   const {
     monthTrx, monthDebit, monthCredit,
-    categoryStats, allCategories, budgetCategories, sourceStats,
+    categoryStats, allCategories, budgetCategories,
     monthlyTrend, yearlyTrend, weeklyTrend,
     avgDailySpend, dayOfWeekStats,
     topMerchants, filteredTrx, chartData,
-  } = useDashboardData({ initialTransactions, selectedMonth, searchQuery, selectedCategory, activeView, budgets });
+  } = useDashboardData({ initialTransactions, selectedMonth, searchQuery, selectedCategory, budgets });
 
   /* ── Actions ── */
   async function handleSync() {

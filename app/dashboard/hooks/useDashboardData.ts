@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import type {
   Transaction, ViewType, CategoryStat, SourceStat,
   MonthlyTrendItem, YearlyTrendItem, WeeklyTrendItem,
@@ -43,7 +43,9 @@ export function useDashboardData({
   activeView,
   budgets,
 }: Params): DashboardData {
-  const today = new Date();
+  // Stable reference: captured once on mount, only changes at midnight via the interval in ClientDashboard.
+  const todayRef = useRef(new Date());
+  const today = todayRef.current;
 
   const monthTrx = useMemo(
     () => initialTransactions.filter((t) => t.transaction_date?.startsWith(selectedMonth)),

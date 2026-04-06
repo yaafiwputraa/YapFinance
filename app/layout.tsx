@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`overflow-x-hidden ${plusJakartaSans.variable}`}>
-      <body className="overflow-x-hidden w-full font-[var(--font-jakarta)]">
+      <body className="overflow-x-hidden w-full">
         {children}
       </body>
     </html>

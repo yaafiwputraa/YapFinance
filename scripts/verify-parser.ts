@@ -96,4 +96,32 @@ check("type ngawur ditolak", () => {
   assert.equal(ParsedTransactionSchema.safeParse({ ...base, type: "REFUND" }).success, false);
 });
 
+console.log("\n== live call ke provider aktif ==");
+const { parseEmailWithAI } = await import("@/lib/ai");
+
+const SAMPLE = `Halo Nasabah,
+Transaksi Anda telah berhasil.
+Tanggal: 05 Maret 2026 14:30 WIB
+Jenis: Pembayaran QRIS
+Merchant: KOPI KENANGAN GRAND INDONESIA
+Nominal: Rp50.000,00
+Terima kasih telah menggunakan blu.`;
+
+try {
+  const started = Date.now();
+  const parsed = await parseEmailWithAI(SAMPLE);
+  const elapsed = ((Date.now() - started) / 1000).toFixed(1);
+  console.log(`  provider: ${process.env.AI_BASE_URL ?? "(default DeepSeek)"}`);
+  console.log(`  model:    ${process.env.AI_MODEL ?? "(default deepseek-chat)"}`);
+  console.log(`  waktu:    ${elapsed}s`);
+  console.log(`  hasil:    ${JSON.stringify(parsed)}`);
+  check("amount terbaca 50000", () => assert.equal(parsed.amount, 50000));
+  check("type DEBIT", () => assert.equal(parsed.type, "DEBIT"));
+  check("merchant menyebut Kopi Kenangan", () =>
+    assert.match(parsed.merchant, /kopi kenangan/i));
+} catch (err) {
+  console.error(`FAIL  live call: ${err instanceof Error ? err.message : String(err)}`);
+  process.exitCode = 1;
+}
+
 console.log(`\n${passed} pemeriksaan lolos, exit code ${process.exitCode ?? 0}\n`);

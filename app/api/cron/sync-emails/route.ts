@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getGmailClient, extractTextBody } from "@/lib/gmail";
-import { parseEmailWithAI } from "@/lib/deepseek";
+import { parseEmailWithAI } from "@/lib/ai";
 
 // Vercel max function duration (seconds). Pro plan allows up to 300.
 // Hobby plan max is 60. Increase if you process many emails at once.
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        // Parse with DeepSeek
+        // Parse with the configured AI provider
         const parsed = await parseEmailWithAI(bodyText);
 
         // Insert into Supabase — use Gmail date as authoritative, fall back to AI-parsed date

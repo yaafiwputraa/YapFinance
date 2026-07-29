@@ -7,7 +7,11 @@
  * .env.local lalu jalankan ulang.
  */
 import assert from "node:assert/strict";
-import { normalizeAmount, ParsedTransactionSchema } from "@/lib/ai";
+import {
+  normalizeAmount,
+  parseEmailWithAI,
+  ParsedTransactionSchema,
+} from "@/lib/ai";
 
 let passed = 0;
 function check(label: string, fn: () => void) {
@@ -24,11 +28,30 @@ function check(label: string, fn: () => void) {
 
 console.log("\n== normalizeAmount ==");
 check("angka lewat apa adanya", () => assert.equal(normalizeAmount(50000), 50000));
+check("angka negatif tidak dibalik diam-diam", () =>
+  assert.equal(normalizeAmount(-50000), -50000));
 check("string polos", () => assert.equal(normalizeAmount("50000"), 50000));
 check("titik ribuan", () => assert.equal(normalizeAmount("50.000"), 50000));
+check("titik desimal gaya Inggris tidak digelembungkan", () =>
+  assert.equal(normalizeAmount("50000.00"), 50000));
 check("format rupiah penuh", () => assert.equal(normalizeAmount("Rp50.000,00"), 50000));
 check("spasi dan prefix", () => assert.equal(normalizeAmount("Rp 1.250.000,50"), 1250000.5));
+check("koma ribuan gaya Inggris", () =>
+  assert.equal(normalizeAmount("1,234,567"), 1234567));
+check("titik ribuan + koma desimal", () =>
+  assert.equal(normalizeAmount("1.234.567,89"), 1234567.89));
+check("koma ribuan + titik desimal", () =>
+  assert.equal(normalizeAmount("1,234,567.89"), 1234567.89));
+check("pemisah tunggal + 3 digit dibaca ribuan", () =>
+  assert.equal(normalizeAmount("1,500"), 1500));
+check("pemisah tunggal + bukan 3 digit dibaca desimal", () =>
+  assert.equal(normalizeAmount("1,5"), 1.5));
+check("tanda minus dipertahankan", () =>
+  assert.equal(normalizeAmount("-50000"), -50000));
+check("notasi eksponen jadi NaN", () =>
+  assert.ok(Number.isNaN(normalizeAmount("1e5"))));
 check("sampah jadi NaN", () => assert.ok(Number.isNaN(normalizeAmount("abc"))));
+check("string kosong jadi NaN", () => assert.ok(Number.isNaN(normalizeAmount(""))));
 
 console.log("\n== ParsedTransactionSchema ==");
 const base = {
@@ -88,6 +111,18 @@ check("amount sampah ditolak", () => {
   assert.equal(ParsedTransactionSchema.safeParse({ ...base, amount: "abc" }).success, false);
 });
 
+check("amount negatif (string) ditolak", () => {
+  assert.equal(ParsedTransactionSchema.safeParse({ ...base, amount: "-50000" }).success, false);
+});
+
+check("amount negatif (number) ditolak", () => {
+  assert.equal(ParsedTransactionSchema.safeParse({ ...base, amount: -50000 }).success, false);
+});
+
+check("amount notasi eksponen ditolak", () => {
+  assert.equal(ParsedTransactionSchema.safeParse({ ...base, amount: "1e5" }).success, false);
+});
+
 check("merchant kosong ditolak", () => {
   assert.equal(ParsedTransactionSchema.safeParse({ ...base, merchant: "   " }).success, false);
 });
@@ -97,7 +132,6 @@ check("type ngawur ditolak", () => {
 });
 
 console.log("\n== live call ke provider aktif ==");
-const { parseEmailWithAI } = await import("@/lib/ai");
 
 const SAMPLE = `Halo Nasabah,
 Transaksi Anda telah berhasil.

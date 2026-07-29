@@ -5,25 +5,68 @@ import { CATEGORIES } from "@/lib/categories";
 /**
  * Ubah amount hasil model jadi angka.
  *
- * Model diinstruksikan mengembalikan angka polos, tapi model kecil sering
- * menyalin format dari email. Email Blu BCA memakai konvensi angka Indonesia
- * ("Rp50.000,00" = lima puluh ribu), jadi titik dibaca sebagai pemisah ribuan
- * dan koma sebagai desimal. Konsekuensinya "50.5" dibaca 505 — nominal rupiah
- * di email tersebut tidak pernah ditulis dengan desimal titik, jadi kasus itu
- * tidak muncul.
+ * Input di sini adalah output model, bukan teks email, jadi formatnya bisa
+ * sudah ternormalisasi ("50000.00"), bergaya Inggris ("1,234,567.89"), atau
+ * bergaya Indonesia ("Rp50.000,00"). Pemisah desimal karena itu dideteksi per
+ * input, bukan diasumsikan.
+ *
+ * Satu kasus tetap ambigu: satu pemisah tunggal yang diikuti tepat tiga digit
+ * ("50.000", "1,500"). Kasus itu dibaca sebagai pemisah ribuan — ini aplikasi
+ * rupiah, "50.000" berarti lima puluh ribu dan "1,500" berarti seribu lima
+ * ratus, dan nominal rupiah pecahan di bawah satu rupiah tidak muncul di email
+ * ini.
+ *
+ * Angka negatif tidak pernah diperbaiki diam-diam: tandanya dipertahankan dan
+ * schema-lah yang menolaknya, karena membalik tanda lebih berbahaya daripada
+ * gagal terang-terangan.
  */
 export function normalizeAmount(input: unknown): number {
   if (typeof input === "number") return input;
   if (typeof input !== "string") return Number.NaN;
 
-  let s = input.replace(/[^\d.,]/g, "");
-  if (s.includes(",")) {
-    s = s.replace(/\./g, "").replace(",", ".");
-  } else {
-    s = s.replace(/\./g, "");
+  // Buang token mata uang di depan, lalu semua spasi (termasuk U+00A0).
+  let s = input
+    .trim()
+    .replace(/^(?:rp|idr)[\s\u00a0]*/i, "")
+    .replace(/[\s\u00a0]/g, "");
+
+  // Menolak "1e5", "abc", "" — tapi tetap menerima "-1.234,56".
+  if (!/^-?[\d.,]+$/.test(s)) return Number.NaN;
+
+  const negative = s.startsWith("-");
+  if (negative) s = s.slice(1);
+
+  const hasDot = s.includes(".");
+  const hasComma = s.includes(",");
+  let decimalSep: "." | "," | null = null;
+
+  if (hasDot && hasComma) {
+    // Yang muncul paling akhir adalah desimal; yang lain pemisah ribuan.
+    decimalSep = s.lastIndexOf(".") > s.lastIndexOf(",") ? "." : ",";
+    const thousandsSep = decimalSep === "." ? "," : ".";
+    s = s.split(thousandsSep).join("");
+  } else if (hasDot || hasComma) {
+    const sep = hasDot ? "." : ",";
+    const occurrences = s.split(sep).length - 1;
+    if (occurrences > 1) {
+      // Muncul berkali-kali → pasti pemisah ribuan.
+      s = s.split(sep).join("");
+    } else {
+      const idx = s.indexOf(sep);
+      const before = s.slice(0, idx);
+      const after = s.slice(idx + 1);
+      if (before.length > 0 && /^\d{3}$/.test(after)) {
+        s = before + after;
+      } else {
+        decimalSep = sep;
+      }
+    }
   }
-  if (s === "") return Number.NaN;
-  return Number.parseFloat(s);
+
+  if (decimalSep === ",") s = s.replace(",", ".");
+
+  const value = Number.parseFloat(s);
+  return negative ? -value : value;
 }
 
 const trimIfString = (v: unknown) => (typeof v === "string" ? v.trim() : v);
@@ -130,9 +173,8 @@ export async function parseEmailWithAI(
     const raw = response.choices[0]?.message?.content?.trim() ?? "";
 
     let reason: string;
-    let json: unknown;
     try {
-      json = JSON.parse(stripFences(raw));
+      const json: unknown = JSON.parse(stripFences(raw));
       const result = ParsedTransactionSchema.safeParse(json);
       if (result.success) return result.data;
       reason = describeIssues(result.error);

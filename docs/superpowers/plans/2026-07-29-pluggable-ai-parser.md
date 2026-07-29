@@ -13,8 +13,9 @@
 ## Global Constraints
 
 - Install dependency selalu dengan `npm install --legacy-peer-deps`.
-- **Tidak ada test framework di proyek ini** dan plan ini tidak menambahkannya. Verifikasi memakai script `verify-parser.ts` di root proyek yang dijalankan dengan `npx tsx@4 --env-file=.env.local verify-parser.ts`, memakai `node:assert` dari standard library. Kombinasi ini sudah diuji di mesin target: alias `@/*` ter-resolve, `.env.local` termuat, `zod` dan `openai` ter-import.
-- **`verify-parser.ts` tidak boleh di-commit.** Setiap langkah `git add` di plan ini menyebut path secara eksplisit — jangan pernah pakai `git add -A` atau `git add .`.
+- **Tidak ada test framework di proyek ini** dan plan ini tidak menambahkannya. Verifikasi memakai `scripts/verify-parser.ts`, dijalankan lewat `npm run verify:parser`, memakai `node:assert` dari standard library. Kombinasi ini sudah diuji di mesin target dari dalam `scripts/`: alias `@/*` ter-resolve, `.env.local` termuat, `zod` dan `openai` ter-import.
+- Harness ini **di-commit** dan jadi artefak permanen — tujuannya supaya model lain bisa dicoba kapan saja tanpa menulis ulang alat ujinya.
+- Setiap langkah `git add` di plan ini menyebut path secara eksplisit — jangan pernah pakai `git add -A` atau `git add .`. `.env.local` berisi kredensial asli dan tidak boleh ikut ter-commit (sudah tercakup `.gitignore`; jangan diuji).
 - Node v22.11.0, npm 10.9.0 di mesin target.
 - Default `AI_*` wajib mempertahankan perilaku DeepSeek. Deployment Vercel yang ada tidak boleh rusak walau variabel `AI_*` tidak pernah diisi di sana.
 - System prompt **wajib memuat kata "JSON"**. Mode `response_format: {"type":"json_object"}` milik DeepSeek menolak request yang prompt-nya tidak menyebut json. Jangan hapus kata itu saat mengedit prompt.
@@ -33,7 +34,8 @@
 | `app/dashboard/components/ManualEntryDialog.tsx` | Modify baris 6–17 | Hapus array duplikat, import |
 | `app/dashboard/hooks/useDashboardData.ts` | Modify baris 91 | Pakai `isCategory()` |
 | `app/dashboard/components/modals/EditModal.tsx` | Modify baris 17–19 | Pakai `isCategory()` |
-| `verify-parser.ts` | Create, **jangan commit** | Harness verifikasi |
+| `scripts/verify-parser.ts` | Create | Harness verifikasi (di-commit) |
+| `package.json` | Modify | Tambah devDependency `tsx` + script `verify:parser` |
 | `.env.local` | Modify | Konfigurasi Ollama lokal (tidak ter-commit, sudah di `.gitignore`) |
 | `.env.local.example`, `CLAUDE.md`, `README.md`, `DEPLOYMENT.md` | Modify | Dokumentasi |
 
@@ -166,7 +168,10 @@ Anotasi `readonly string[]` diperlukan karena kedua cabang ternary sekarang bert
 
 - [ ] **Step 6: Verifikasi tidak ada duplikat yang tersisa**
 
-Run: `npx --yes rg -n "\"Food & Beverage\"" --glob "!node_modules"`
+Run: `git grep -n --untracked '"Food & Beverage"' -- '*.ts' '*.tsx'`
+
+(`ripgrep` tidak terpasang di mesin ini — pakai `git grep`. Flag `--untracked` wajib, karena `lib/categories.ts` masih untracked sampai Step 8.)
+
 Expected: **tepat satu** hasil, yaitu `lib/categories.ts`. Kalau masih ada di `helpers.ts` atau `ManualEntryDialog.tsx`, berarti Step 2 atau 3 belum tuntas.
 
 - [ ] **Step 7: Verifikasi typecheck dan build**
@@ -194,7 +199,8 @@ Alasan schema ini ada: kode sekarang melakukan `JSON.parse(raw) as ParsedTransac
 
 **Files:**
 - Create: `lib/ai.ts`
-- Create: `verify-parser.ts` (**jangan commit**)
+- Create: `scripts/verify-parser.ts`
+- Modify: `package.json`
 
 **Interfaces:**
 - Consumes: `CATEGORIES` dari `lib/categories.ts` (Task 1)
@@ -203,14 +209,30 @@ Alasan schema ini ada: kode sekarang melakukan `JSON.parse(raw) as ParsedTransac
   - `ParsedTransactionSchema` — Zod object schema
   - `type ParsedTransaction = z.infer<typeof ParsedTransactionSchema>` dengan field `date: string`, `amount: number`, `type: "DEBIT" | "KREDIT"`, `merchant: string`, `category: Category`
 
+- [ ] **Step 0: Pasang runner TypeScript**
+
+Proyek ini belum punya cara menjalankan `.ts` di luar Next.js.
+
+Run: `npm install --legacy-peer-deps -D tsx@4`
+
+Lalu tambahkan ke `"scripts"` di `package.json`, setelah baris `"lint"`:
+
+```json
+    "verify:parser": "tsx --env-file=.env.local scripts/verify-parser.ts"
+```
+
 - [ ] **Step 1: Tulis harness verifikasi yang gagal**
 
-Buat `verify-parser.ts` di root proyek:
+Buat `scripts/verify-parser.ts`:
 
 ```ts
 /**
- * Harness verifikasi manual. JANGAN DI-COMMIT.
- * Jalankan: npx tsx@4 --env-file=.env.local verify-parser.ts
+ * Harness verifikasi untuk parser AI.
+ * Jalankan: npm run verify:parser
+ *
+ * Proyek ini tidak punya test framework; file ini adalah pengganti yang
+ * disengaja. Ia juga berguna untuk membandingkan model: ubah AI_MODEL di
+ * .env.local lalu jalankan ulang.
  */
 import assert from "node:assert/strict";
 import { normalizeAmount, ParsedTransactionSchema } from "@/lib/ai";
@@ -307,7 +329,7 @@ console.log(`\n${passed} pemeriksaan lolos, exit code ${process.exitCode ?? 0}\n
 
 - [ ] **Step 2: Jalankan harness untuk memastikan GAGAL**
 
-Run: `npx tsx@4 --env-file=.env.local verify-parser.ts`
+Run: `npm run verify:parser`
 Expected: FAIL — `Cannot find module '@/lib/ai'`. Ini konfirmasi harness benar-benar mengeksekusi kode yang belum ada.
 
 - [ ] **Step 3: Buat `lib/ai.ts` dengan normalizer dan schema**
@@ -365,7 +387,7 @@ export type ParsedTransaction = z.infer<typeof ParsedTransactionSchema>;
 
 - [ ] **Step 4: Jalankan harness untuk memastikan LOLOS**
 
-Run: `npx tsx@4 --env-file=.env.local verify-parser.ts`
+Run: `npm run verify:parser`
 Expected: 18 pemeriksaan lolos, exit code 0, tidak ada baris `FAIL`.
 
 - [ ] **Step 5: Verifikasi typecheck**
@@ -373,15 +395,15 @@ Expected: 18 pemeriksaan lolos, exit code 0, tidak ada baris `FAIL`.
 Run: `npx tsc --noEmit`
 Expected: keluar tanpa error.
 
-- [ ] **Step 6: Commit — perhatikan `verify-parser.ts` TIDAK ikut**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add lib/ai.ts
+git add lib/ai.ts scripts/verify-parser.ts package.json package-lock.json
 git commit -m "feat: add Zod validation schema for parsed transactions"
 ```
 
 Run: `git status --short`
-Expected: `verify-parser.ts` masih muncul sebagai untracked (`??`). Kalau tidak muncul, berarti tidak sengaja ter-commit — batalkan dengan `git rm --cached verify-parser.ts`.
+Expected: bersih di luar file untracked yang memang sudah ada sebelumnya (`.claude/`, `CLAUDE.md`). **`.env.local` tidak boleh muncul** — kalau muncul, hentikan dan periksa `.gitignore`.
 
 ---
 
@@ -391,7 +413,7 @@ Expected: `verify-parser.ts` masih muncul sebagai untracked (`??`). Kalau tidak 
 - Modify: `lib/ai.ts` (tambahkan klien, prompt, retry)
 - Delete: `lib/deepseek.ts`
 - Modify: `app/api/cron/sync-emails/route.ts:4,81`
-- Modify: `verify-parser.ts` (**jangan commit**)
+- Modify: `scripts/verify-parser.ts`
 - Modify: `.env.local`
 
 **Interfaces:**
@@ -413,7 +435,7 @@ AI_MODEL=llama3.2:3b
 
 - [ ] **Step 2: Tambahkan pemeriksaan live ke harness**
 
-Tambahkan di akhir `verify-parser.ts`, sebelum baris ringkasan `console.log`:
+Tambahkan di `scripts/verify-parser.ts`, sebelum baris ringkasan `console.log` di paling bawah:
 
 ```ts
 console.log("\n== live call ke provider aktif ==");
@@ -449,7 +471,7 @@ Karena memakai top-level `await`, pastikan tidak ada yang mengubah file jadi Com
 
 - [ ] **Step 3: Jalankan harness untuk memastikan bagian live GAGAL**
 
-Run: `npx tsx@4 --env-file=.env.local verify-parser.ts`
+Run: `npm run verify:parser`
 Expected: pemeriksaan schema tetap lolos, bagian live FAIL dengan `parseEmailWithAI is not a function` atau error export. Konfirmasi bahwa fungsinya memang belum ada.
 
 - [ ] **Step 4: Tambahkan klien, prompt, dan retry ke `lib/ai.ts`**
@@ -573,7 +595,7 @@ export async function parseEmailWithAI(
 
 - [ ] **Step 5: Jalankan harness untuk memastikan LOLOS lewat Ollama**
 
-Run: `npx tsx@4 --env-file=.env.local verify-parser.ts`
+Run: `npm run verify:parser`
 Expected: seluruh pemeriksaan lolos. Bagian live mencetak `provider: http://localhost:11434/v1` dan `model: llama3.2:3b`, dan hasilnya `amount: 50000` dengan `type: "DEBIT"`.
 
 Kalau gagal karena connection refused, jalankan `ollama serve` dulu di terminal lain, atau cek `curl -s http://localhost:11434/api/version`.
@@ -582,9 +604,9 @@ Kalau gagal karena connection refused, jalankan `ollama serve` dulu di terminal 
 
 Ini yang membuktikan deployment Vercel aman.
 
-Run: `npx tsx@4 verify-parser.ts`
+Run: `npx tsx@4 scripts/verify-parser.ts`
 
-(Perhatikan: **tanpa** `--env-file`, jadi tidak ada satu pun `AI_*` yang termuat.)
+(Perhatikan: memanggil `tsx` langsung, **bukan** lewat `npm run verify:parser`, supaya `--env-file` tidak ikut — jadi tidak ada satu pun `AI_*` yang termuat.)
 
 Expected: bagian schema lolos semua; bagian live mencetak `provider: (default DeepSeek)` lalu gagal dengan error autentikasi — karena `DEEPSEEK_API_KEY` juga ikut tidak termuat. Yang dibuktikan di sini adalah **base URL dan model jatuh ke default DeepSeek**, bukan ke Ollama. Kalau baris provider malah menampilkan URL Ollama, berarti ada default yang salah.
 
@@ -610,8 +632,8 @@ Tidak ada perubahan lain di file ini. Pemanggilan parser sudah berada di dalam `
 git rm lib/deepseek.ts
 ```
 
-Run: `npx --yes rg -n "lib/deepseek" --glob "!node_modules" --glob "!docs"`
-Expected: tidak ada hasil. Kalau masih ada, berarti ada importer yang terlewat.
+Run: `git grep -n --untracked "lib/deepseek" -- '*.ts' '*.tsx'`
+Expected: tidak ada hasil (exit code 1). Kalau ada, berarti ada importer yang terlewat.
 
 - [ ] **Step 9: Verifikasi typecheck, lint, dan build**
 
@@ -627,44 +649,72 @@ Expected: build sukses, route `/api/cron/sync-emails` muncul di ringkasan output
 - [ ] **Step 10: Commit**
 
 ```bash
-git add lib/ai.ts app/api/cron/sync-emails/route.ts
+git add lib/ai.ts app/api/cron/sync-emails/route.ts scripts/verify-parser.ts
 git commit -m "feat: make AI parser provider configurable via env vars"
 ```
 
+`lib/deepseek.ts` sudah di-stage oleh `git rm` di Step 8.
+
 Run: `git status --short`
-Expected: `verify-parser.ts` masih untracked (`??`).
+Expected: **`.env.local` tidak muncul.** Kalau muncul, hentikan dan periksa `.gitignore` sebelum lanjut.
 
 ---
 
 ### Task 4: Verifikasi kualitas dengan email asli
 
-Task 2 dan 3 membuktikan kodenya benar. Task ini menjawab pertanyaan yang berbeda dan tidak bisa dijawab oleh kode: **apakah `llama3.2:3b` cukup pintar untuk pekerjaan ini.** Tidak ada perubahan kode kecuali harness yang tidak di-commit.
+Task 2 dan 3 membuktikan kodenya benar. Task ini menjawab pertanyaan yang berbeda dan tidak bisa dijawab oleh kode: **apakah `llama3.2:3b` cukup pintar untuk pekerjaan ini.**
+
+**Task ini dijalankan bersama pemilik repo, bukan oleh subagent.** Ia butuh email asli dari Gmail-nya dan akses ke Supabase-nya.
 
 **Files:**
-- Modify: `verify-parser.ts` (**jangan commit**)
+- Modify: `scripts/verify-parser.ts`
+- Modify: `.gitignore`
 
 **Interfaces:**
 - Consumes: `parseEmailWithAI` (Task 3)
 - Produces: tidak ada artefak kode — outputnya adalah keputusan apakah model perlu diganti
 
-- [ ] **Step 1: Kumpulkan 3–5 body email asli**
+- [ ] **Step 1: Siapkan tempat sampel yang tidak ter-commit**
+
+Body email bank memuat nominal, merchant, dan kadang nomor rekening. Harness sekarang di-commit, jadi sampelnya **tidak boleh** ditempel ke dalamnya — simpan di file terpisah yang di-gitignore.
+
+Tambahkan ke `.gitignore`, di bawah blok env files:
+
+```
+# sampel email asli untuk verify:parser — jangan pernah di-commit
+scripts/real-emails.json
+```
+
+- [ ] **Step 2: Kumpulkan 3–5 body email asli**
 
 Jalankan `npm run dev`, buka `http://localhost:3000/dashboard`, tekan tombol sync. Baca log terminal — `route.ts:73` mencetak `[Sync] Processing ID: ... | Snippet: ...` untuk tiap email.
 
 Kalau semua email sudah ter-dedupe dan tidak ada yang diproses, ambil sampel dari kolom `raw_snippet` di tabel `transactions` Supabase.
 
-Simpan sebagai array di `verify-parser.ts`:
+Simpan sebagai `scripts/real-emails.json` — array of string, satu string per body email:
 
-```ts
-const REAL_EMAILS: string[] = [
-  // tempel body email asli di sini, satu string per email
-];
+```json
+[
+  "Halo Nasabah, ...",
+  "Halo Nasabah, ..."
+]
 ```
 
-- [ ] **Step 2: Tambahkan perbandingan berdampingan ke harness**
+- [ ] **Step 3: Tambahkan perbandingan berdampingan ke harness**
+
+Muat sampelnya dari file, dan lewati bagian ini kalau filenya tidak ada — supaya `npm run verify:parser` tetap jalan di mesin mana pun:
 
 ```ts
-if (REAL_EMAILS.length > 0) {
+import { readFileSync, existsSync } from "node:fs";
+
+const SAMPLE_PATH = new URL("./real-emails.json", import.meta.url);
+const REAL_EMAILS: string[] = existsSync(SAMPLE_PATH)
+  ? (JSON.parse(readFileSync(SAMPLE_PATH, "utf8")) as string[])
+  : [];
+
+if (REAL_EMAILS.length === 0) {
+  console.log("\n(lewati perbandingan provider — scripts/real-emails.json tidak ada)");
+} else {
   console.log("\n== perbandingan Ollama vs DeepSeek pada email asli ==");
   const local = { base: process.env.AI_BASE_URL, key: process.env.AI_API_KEY, model: process.env.AI_MODEL };
 
@@ -697,9 +747,9 @@ if (REAL_EMAILS.length > 0) {
 
 Klien dibuat ulang tiap pemanggilan (`getClient()` dipanggil di dalam `parseEmailWithAI`), jadi menukar `process.env` di antara pemanggilan memang berpengaruh.
 
-- [ ] **Step 3: Jalankan perbandingan**
+- [ ] **Step 4: Jalankan perbandingan**
 
-Run: `npx tsx@4 --env-file=.env.local verify-parser.ts`
+Run: `npm run verify:parser`
 
 Bandingkan tiap baris berpasangan. Yang diperiksa, berurutan menurut tingkat kepentingan:
 
@@ -708,18 +758,18 @@ Bandingkan tiap baris berpasangan. Yang diperiksa, berurutan menurut tingkat kep
 3. **`merchant` mirip** — tidak harus sama persis; "KOPI KENANGAN GI" vs "Kopi Kenangan Grand Indonesia" sama-sama diterima.
 4. **`category` masuk akal** — penilaian subjektif, dan tetap bisa diperbaiki manual lewat EditModal.
 
-- [ ] **Step 4: Putuskan berdasarkan hasilnya**
+- [ ] **Step 5: Putuskan berdasarkan hasilnya**
 
-- **Semua `amount` dan `type` cocok** → `llama3.2:3b` memadai, lanjut ke Step 5.
+- **Semua `amount` dan `type` cocok** → `llama3.2:3b` memadai, lanjut ke Step 6.
 - **Ada yang meleset** → coba model lebih besar sebelum mengubah arsitektur apa pun:
 
 ```bash
 ollama pull qwen2.5:7b
 ```
 
-lalu ubah `AI_MODEL=qwen2.5:7b` di `.env.local` dan ulangi Step 3. `qwen2.5:7b` dipilih karena kuat pada extraction terstruktur dan muat nyaman di RAM 30GB. Catat model mana yang akhirnya dipakai.
+lalu ubah `AI_MODEL=qwen2.5:7b` di `.env.local` dan ulangi Step 4. `qwen2.5:7b` dipilih karena kuat pada extraction terstruktur dan muat nyaman di RAM 30GB. Catat model mana yang akhirnya dipakai.
 
-- [ ] **Step 5: Uji jalur penuh lewat aplikasi sungguhan**
+- [ ] **Step 6: Uji jalur penuh lewat aplikasi sungguhan**
 
 Harness memanggil parser secara langsung; step ini membuktikan jalur lengkapnya — Gmail, parser, Supabase.
 
@@ -728,10 +778,15 @@ Harness memanggil parser secara langsung; step ini membuktikan jalur lengkapnya 
 3. Expected: respons JSON menunjukkan `processed: 1`.
 4. Periksa baris yang baru masuk di Supabase — `amount`, `type`, `merchant_name`, `category` terisi wajar, dan `entry_method` bernilai `AUTO_EMAIL`.
 
-- [ ] **Step 6: Tidak ada commit di task ini**
+- [ ] **Step 7: Commit**
+
+```bash
+git add .gitignore scripts/verify-parser.ts
+git commit -m "test: compare AI providers on real email samples"
+```
 
 Run: `git status --short`
-Expected: hanya `verify-parser.ts` yang untracked. Kalau ada file lain berubah, berarti ada perubahan tidak sengaja — periksa sebelum lanjut.
+Expected: **`scripts/real-emails.json` tidak muncul** — kalau muncul, Step 1 belum tuntas dan data bank asli terancam ter-commit. Hentikan dan perbaiki `.gitignore` dulu.
 
 ---
 
@@ -857,10 +912,10 @@ Tambahkan satu kalimat di bawah tabel: Ollama di localhost tidak bisa dijangkau 
 
 - [ ] **Step 5: Verifikasi tidak ada rujukan basi**
 
-Run: `npx --yes rg -n "lib/deepseek|DeepSeek V3 parses" --glob "!node_modules" --glob "!docs"`
-Expected: tidak ada hasil.
+Run: `git grep -n --untracked -e "lib/deepseek" -e "DeepSeek V3 parses" -- . ':!docs'`
+Expected: tidak ada hasil (exit code 1).
 
-Run: `npx --yes rg -n "(?i)deepseek" --glob "!node_modules" --glob "!docs" -c`
+Run: `git grep -ic --untracked "deepseek" -- . ':!docs'`
 Expected: masih ada hasil di keempat file dokumentasi plus `lib/ai.ts` — DeepSeek memang tetap jadi default, jadi penyebutannya wajar. Yang dipastikan di sini adalah tidak ada lagi yang menggambarkannya sebagai satu-satunya pilihan.
 
 - [ ] **Step 6: Verifikasi build masih sehat**
@@ -878,16 +933,32 @@ git add .env.local.example CLAUDE.md README.md DEPLOYMENT.md
 git commit -m "docs: document configurable AI provider"
 ```
 
-- [ ] **Step 8: Bersihkan harness**
+- [ ] **Step 8: Dokumentasikan harness-nya**
 
-`verify-parser.ts` sudah selesai tugasnya. Simpan kalau masih mau bereksperimen dengan model lain; hapus kalau sudah tidak perlu:
+Harness ini permanen, jadi harus disebut di dokumentasi. Tambahkan ke blok perintah di `CLAUDE.md` (bagian `## Commands`, setelah baris `npm run lint`):
 
 ```bash
-rm verify-parser.ts
+npm run verify:parser            # Verify the AI parser (schema checks + live provider call)
+```
+
+Ganti juga kalimat "There are no tests in this project." tepat di bawah blok itu:
+
+```markdown
+There is no test framework. `npm run verify:parser` is the closest thing: it
+asserts the Zod schema's behaviour and makes one live call to the configured
+provider. Drop an array of raw email bodies at `scripts/real-emails.json`
+(git-ignored) to also get a side-by-side comparison between providers.
+```
+
+Ini menyentuh `CLAUDE.md` lagi setelah commit di Step 7, jadi butuh commit sendiri:
+
+```bash
+git add CLAUDE.md
+git commit -m "docs: document the parser verification harness"
 ```
 
 Run: `git status --short`
-Expected: bersih (selain `.claude/` dan `CLAUDE.md` yang untracked kalau memang belum pernah di-commit).
+Expected: bersih selain file untracked yang memang sudah ada sebelumnya.
 
 ---
 

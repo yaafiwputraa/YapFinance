@@ -1,0 +1,99 @@
+/**
+ * Harness verifikasi untuk parser AI.
+ * Jalankan: npm run verify:parser
+ *
+ * Proyek ini tidak punya test framework; file ini adalah pengganti yang
+ * disengaja. Ia juga berguna untuk membandingkan model: ubah AI_MODEL di
+ * .env.local lalu jalankan ulang.
+ */
+import assert from "node:assert/strict";
+import { normalizeAmount, ParsedTransactionSchema } from "@/lib/ai";
+
+let passed = 0;
+function check(label: string, fn: () => void) {
+  try {
+    fn();
+    passed++;
+    console.log(`  ok  ${label}`);
+  } catch (err) {
+    console.error(`FAIL  ${label}`);
+    console.error(`      ${err instanceof Error ? err.message : String(err)}`);
+    process.exitCode = 1;
+  }
+}
+
+console.log("\n== normalizeAmount ==");
+check("angka lewat apa adanya", () => assert.equal(normalizeAmount(50000), 50000));
+check("string polos", () => assert.equal(normalizeAmount("50000"), 50000));
+check("titik ribuan", () => assert.equal(normalizeAmount("50.000"), 50000));
+check("format rupiah penuh", () => assert.equal(normalizeAmount("Rp50.000,00"), 50000));
+check("spasi dan prefix", () => assert.equal(normalizeAmount("Rp 1.250.000,50"), 1250000.5));
+check("sampah jadi NaN", () => assert.ok(Number.isNaN(normalizeAmount("abc"))));
+
+console.log("\n== ParsedTransactionSchema ==");
+const base = {
+  date: "2026-03-05T14:30:00+07:00",
+  amount: 50000,
+  type: "DEBIT",
+  merchant: "Kopi Kenangan",
+  category: "Food & Beverage",
+};
+
+check("objek valid lolos", () => {
+  const r = ParsedTransactionSchema.parse(base);
+  assert.equal(r.amount, 50000);
+  assert.equal(r.category, "Food & Beverage");
+});
+
+check("amount format rupiah dinormalisasi", () => {
+  const r = ParsedTransactionSchema.parse({ ...base, amount: "Rp50.000,00" });
+  assert.equal(r.amount, 50000);
+});
+
+check("type huruf kecil di-uppercase", () => {
+  const r = ParsedTransactionSchema.parse({ ...base, type: "debit" });
+  assert.equal(r.type, "DEBIT");
+});
+
+check("merchant di-trim", () => {
+  const r = ParsedTransactionSchema.parse({ ...base, merchant: "  Kopi Kenangan  " });
+  assert.equal(r.merchant, "Kopi Kenangan");
+});
+
+check("kategori karangan jatuh ke Other", () => {
+  const r = ParsedTransactionSchema.parse({ ...base, category: "Kopi Susu" });
+  assert.equal(r.category, "Other");
+});
+
+check("Sports diterima (regresi bug prompt)", () => {
+  const r = ParsedTransactionSchema.parse({ ...base, category: "Sports" });
+  assert.equal(r.category, "Sports");
+});
+
+check("Game diterima (regresi bug prompt)", () => {
+  const r = ParsedTransactionSchema.parse({ ...base, category: "Game" });
+  assert.equal(r.category, "Game");
+});
+
+check("date kosong dapat fallback, bukan gagal", () => {
+  const r = ParsedTransactionSchema.parse({ ...base, date: "" });
+  assert.ok(r.date.length > 0);
+});
+
+check("amount nol ditolak", () => {
+  assert.equal(ParsedTransactionSchema.safeParse({ ...base, amount: 0 }).success, false);
+});
+
+check("amount sampah ditolak", () => {
+  assert.equal(ParsedTransactionSchema.safeParse({ ...base, amount: "abc" }).success, false);
+});
+
+check("merchant kosong ditolak", () => {
+  assert.equal(ParsedTransactionSchema.safeParse({ ...base, merchant: "   " }).success, false);
+});
+
+check("type ngawur ditolak", () => {
+  assert.equal(ParsedTransactionSchema.safeParse({ ...base, type: "REFUND" }).success, false);
+});
+
+console.log(`\n${passed} pemeriksaan lolos, exit code ${process.exitCode ?? 0}\n`);

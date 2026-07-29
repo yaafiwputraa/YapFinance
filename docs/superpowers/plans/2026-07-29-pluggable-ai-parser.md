@@ -180,7 +180,14 @@ Run: `npx tsc --noEmit`
 Expected: keluar tanpa error. Ini yang membuktikan `as const` tidak memecahkan pemanggilan `.includes()` di Step 4 dan 5.
 
 Run: `npm run lint`
-Expected: no ESLint warnings or errors.
+
+Expected: **tepat 2 error + 3 warning yang sudah ada sejak sebelum plan ini**, dan tidak ada tambahan. Sudah diverifikasi pada commit `9b56ad5`:
+
+- `app/dashboard/components/charts/TrendLineChart.tsx:47` — `'chartW' is assigned a value but never used`
+- `app/dashboard/views/AnalyticsView.tsx:35` — `'selectedMonth' is defined but never used`
+- `app/dashboard/hooks/useDashboardData.ts:108,120,158` — warning `react-hooks/exhaustive-deps` soal `today`
+
+Jangan perbaiki temuan-temuan itu; semuanya di luar ruang lingkup plan ini. Yang penting: tidak ada temuan **baru** di file yang kamu sentuh. Kalau ragu, bandingkan dengan `git stash push -u && npm run lint && git stash pop`.
 
 - [ ] **Step 8: Commit**
 
@@ -641,7 +648,14 @@ Run: `npx tsc --noEmit`
 Expected: keluar tanpa error.
 
 Run: `npm run lint`
-Expected: no ESLint warnings or errors.
+
+Expected: **tepat 2 error + 3 warning yang sudah ada sejak sebelum plan ini**, dan tidak ada tambahan. Sudah diverifikasi pada commit `9b56ad5`:
+
+- `app/dashboard/components/charts/TrendLineChart.tsx:47` — `'chartW' is assigned a value but never used`
+- `app/dashboard/views/AnalyticsView.tsx:35` — `'selectedMonth' is defined but never used`
+- `app/dashboard/hooks/useDashboardData.ts:108,120,158` — warning `react-hooks/exhaustive-deps` soal `today`
+
+Jangan perbaiki temuan-temuan itu; semuanya di luar ruang lingkup plan ini. Yang penting: tidak ada temuan **baru** di file yang kamu sentuh. Kalau ragu, bandingkan dengan `git stash push -u && npm run lint && git stash pop`.
 
 Run: `npm run build`
 Expected: build sukses, route `/api/cron/sync-emails` muncul di ringkasan output.
@@ -921,7 +935,14 @@ Expected: masih ada hasil di keempat file dokumentasi plus `lib/ai.ts` — DeepS
 - [ ] **Step 6: Verifikasi build masih sehat**
 
 Run: `npm run lint`
-Expected: no ESLint warnings or errors.
+
+Expected: **tepat 2 error + 3 warning yang sudah ada sejak sebelum plan ini**, dan tidak ada tambahan. Sudah diverifikasi pada commit `9b56ad5`:
+
+- `app/dashboard/components/charts/TrendLineChart.tsx:47` — `'chartW' is assigned a value but never used`
+- `app/dashboard/views/AnalyticsView.tsx:35` — `'selectedMonth' is defined but never used`
+- `app/dashboard/hooks/useDashboardData.ts:108,120,158` — warning `react-hooks/exhaustive-deps` soal `today`
+
+Jangan perbaiki temuan-temuan itu; semuanya di luar ruang lingkup plan ini. Yang penting: tidak ada temuan **baru** di file yang kamu sentuh. Kalau ragu, bandingkan dengan `git stash push -u && npm run lint && git stash pop`.
 
 Run: `npm run build`
 Expected: build sukses.

@@ -14,7 +14,7 @@ A personal finance tracker that automatically reads bank notification emails and
 
 YapBalance uses a hybrid approach:
 
-- **AI-based parsing.** Instead of regex, raw email text is sent to DeepSeek V3. As long as the amount and merchant are somewhere in the email, the model will find them regardless of template changes.
+- **AI-based parsing.** Instead of regex, raw email text is sent to an LLM (DeepSeek V3 by default). As long as the amount and merchant are somewhere in the email, the model will find them regardless of template changes.
 - **Manual entry fallback.** A fast input form for transactions that do not generate email notifications, such as GoPay or cash payments.
 
 ---
@@ -67,7 +67,7 @@ YapBalance uses a hybrid approach:
 | Framework | Next.js 15 (App Router) |
 | Styling | Tailwind CSS |
 | Database | Supabase (PostgreSQL) |
-| AI Engine | DeepSeek V3 via OpenAI-compatible SDK |
+| AI Engine | Any OpenAI-compatible endpoint (DeepSeek V3 by default, Ollama supported) |
 | Email Access | Gmail API (OAuth2) |
 | Deployment | Vercel (with Cron Jobs) |
 
@@ -79,8 +79,8 @@ YapBalance uses a hybrid approach:
 
 1. Vercel Cron triggers `GET /api/cron/sync-emails` once per day.
 2. The server calls Gmail API and fetches up to 50 emails matching `from:receipts@blubybcadigital.id`.
-3. For each unseen email, the raw text body is extracted and sent to DeepSeek with a structured system prompt.
-4. DeepSeek returns a clean JSON object:
+3. For each unseen email, the raw text body is extracted and sent to the configured AI provider with a structured system prompt.
+4. The provider returns a JSON object, which is validated with Zod before insert:
 
 ```json
 {
@@ -137,6 +137,8 @@ Transactions are classified into the following categories (used by both the AI p
 - Game
 - Other
 
+Defined in lib/categories.ts.
+
 ---
 
 ## Environment Variables
@@ -150,6 +152,9 @@ Transactions are classified into the following categories (used by both the AI p
 | `GOOGLE_REDIRECT_URI` | Authorized redirect URI (must match Google Cloud Console) |
 | `GOOGLE_REFRESH_TOKEN` | Long-lived refresh token obtained via OAuth flow |
 | `DEEPSEEK_API_KEY` | API key from platform.deepseek.com |
+| `AI_BASE_URL` | Optional. OpenAI-compatible base URL (default `https://api.deepseek.com`) |
+| `AI_MODEL` | Optional. Model name (default `deepseek-chat`) |
+| `AI_API_KEY` | Optional. Falls back to `DEEPSEEK_API_KEY` |
 | `CRON_SECRET` | Random secret to protect the cron endpoint |
 | `NEXT_PUBLIC_CRON_SECRET` | Same value as `CRON_SECRET` — exposed to the client for the manual sync button |
 

@@ -932,9 +932,11 @@ Expected: build sukses.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add .env.local.example CLAUDE.md README.md DEPLOYMENT.md
+git add .env.local.example README.md DEPLOYMENT.md
 git commit -m "docs: document configurable AI provider"
 ```
+
+**`CLAUDE.md` sengaja tidak di-stage.** File itu belum pernah di-commit di repo ini (statusnya `??` sejak sebelum plan ini mulai), dan keputusan untuk mulai men-track-nya bukan milik plan ini. Tetap edit isinya supaya akurat — pemiliknya bisa commit kapan pun ia mau.
 
 - [ ] **Step 8: Dokumentasikan harness-nya**
 
@@ -953,15 +955,10 @@ provider. Drop an array of raw email bodies at `scripts/real-emails.json`
 (git-ignored) to also get a side-by-side comparison between providers.
 ```
 
-Ini menyentuh `CLAUDE.md` lagi setelah commit di Step 7, jadi butuh commit sendiri:
-
-```bash
-git add CLAUDE.md
-git commit -m "docs: document the parser verification harness"
-```
+Tidak ada commit di step ini — `CLAUDE.md` tetap untracked, sesuai catatan di Step 7.
 
 Run: `git status --short`
-Expected: bersih selain file untracked yang memang sudah ada sebelumnya.
+Expected: `?? .claude/` dan `?? CLAUDE.md` masih untracked, tidak ada file lain yang tersisa belum ter-commit.
 
 ---
 

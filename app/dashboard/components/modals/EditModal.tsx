@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Check, Loader2 } from "lucide-react";
-import { CATEGORIES, SOURCES } from "../../lib/helpers";
+import { CATEGORIES, isCategory, SOURCES } from "../../lib/helpers";
 import type { Transaction } from "../../lib/types";
 
 interface EditModalProps {
@@ -14,7 +14,7 @@ interface EditModalProps {
 export function EditModal({ trx, onClose, onSuccess }: EditModalProps) {
   const [loading, setLoading] = useState(false);
   const initialCategory = trx.category || "Other";
-  const categoryOptions = CATEGORIES.includes(initialCategory)
+  const categoryOptions: readonly string[] = isCategory(initialCategory)
     ? CATEGORIES
     : [initialCategory, ...CATEGORIES];
   const [form, setForm] = useState({

@@ -12,18 +12,8 @@ export const COLORS = [
   "bg-rose-500",
 ];
 
-export const CATEGORIES = [
-  "Food & Beverage",
-  "Transportation",
-  "Shopping",
-  "Bills & Utilities",
-  "Transfer",
-  "Top-up",
-  "ATM Withdrawal",
-  "Sports",
-  "Game",
-  "Other",
-];
+export { CATEGORIES, isCategory } from "@/lib/categories";
+export type { Category } from "@/lib/categories";
 
 export const SOURCES = [
   { value: "CASH", label: "Uang Tunai" },

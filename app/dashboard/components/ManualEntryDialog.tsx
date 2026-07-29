@@ -2,19 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const CATEGORIES = [
-  "Food & Beverage",
-  "Transportation",
-  "Shopping",
-  "Bills & Utilities",
-  "Transfer",
-  "Top-up",
-  "ATM Withdrawal",
-  "Sports",
-  "Game",
-  "Other",
-];
+import { CATEGORIES } from "@/lib/categories";
 
 const SOURCES = ["BLU", "GOPAY", "CASH"];
 

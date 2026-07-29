@@ -96,7 +96,7 @@ Ikuti prompt dan set env vars saat diminta, atau set via dashboard setelah deplo
 Setelah deploy berhasil:
 
 1. Buka Vercel Dashboard → project → **Cron Jobs** tab
-2. Pastikan cron `/api/cron/sync-emails` muncul dengan schedule `0 */6 * * *` (setiap 6 jam)
+2. Pastikan cron `/api/cron/sync-emails` muncul dengan schedule `0 0 * * *` (sekali sehari, tengah malam UTC — sesuai `vercel.json`)
 3. Klik **Run** untuk tes manual pertama kali
 4. Cek **Function Logs** untuk memastikan tidak ada error
 

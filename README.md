@@ -71,6 +71,8 @@ YapBalance uses a hybrid approach:
 | Email Access | Gmail API (OAuth2) |
 | Deployment | Vercel (with Cron Jobs) |
 
+Ollama works, but model quality matters: on one synthetic sample `llama3.2:3b` labelled a plainly outgoing merchant payment as `KREDIT` and a coffee shop as `Shopping`. Zod validation cannot catch that — `KREDIT` is a valid enum value, so the transaction is stored with an inverted sign. Sanity-check any small model with `npm run verify:parser` before relying on it.
+
 ---
 
 ## How It Works

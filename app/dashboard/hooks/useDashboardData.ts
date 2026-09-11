@@ -4,7 +4,7 @@ import type {
   MonthlyTrendItem, YearlyTrendItem, WeeklyTrendItem,
   MerchantStat, DayOfWeekStat,
 } from "../lib/types";
-import { CATEGORIES, COLORS, toYYYYMM, monthLabel, shiftMonth } from "../lib/helpers";
+import { CATEGORIES, COLORS, isCategory, toYYYYMM, monthLabel, shiftMonth } from "../lib/helpers";
 
 interface Params {
   initialTransactions: Transaction[];
@@ -88,7 +88,7 @@ export function useDashboardData({
   const budgetCategories = useMemo(() => {
     const extra = new Set<string>();
     initialTransactions.forEach((t) => {
-      if (t.category && !CATEGORIES.includes(t.category)) extra.add(t.category);
+      if (t.category && !isCategory(t.category)) extra.add(t.category);
     });
     return [...CATEGORIES, ...Array.from(extra).sort()];
   }, [initialTransactions]);

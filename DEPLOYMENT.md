@@ -8,6 +8,7 @@ Make sure semua ini sudah ada sebelum deploy:
 - [ ] Google Cloud project dengan **Gmail API** enabled
 - [ ] OAuth2 credentials (Client ID + Client Secret)
 - [ ] DeepSeek API key dari https://platform.deepseek.com/api_keys
+      (atau endpoint OpenAI-compatible lain — lihat AI_BASE_URL di bawah)
 - [ ] `GOOGLE_REFRESH_TOKEN` sudah di-generate (lihat langkah di bawah)
 
 ---
@@ -68,8 +69,13 @@ https://yourdomain.com/api/auth/callback/google
 | `GOOGLE_REDIRECT_URI` | `https://<your-app>.vercel.app/api/auth/callback/google` |
 | `GOOGLE_REFRESH_TOKEN` | token dari Step 1 |
 | `DEEPSEEK_API_KEY` | `sk-xxxx` |
+| `AI_BASE_URL` | _(kosongkan)_ — default ke DeepSeek |
+| `AI_MODEL` | _(kosongkan)_ — default ke `deepseek-chat` |
+| `AI_API_KEY` | _(kosongkan)_ — default ke `DEEPSEEK_API_KEY` |
 | `CRON_SECRET` | output dari Step 2 |
 | `NEXT_PUBLIC_CRON_SECRET` | **nilai yang sama** dengan `CRON_SECRET` |
+
+Ollama di localhost tidak bisa dijangkau dari Vercel; produksi tetap memakai DeepSeek kecuali endpoint lokalnya diekspos lewat tunnel.
 
 5. Klik **Deploy**
 
@@ -90,7 +96,7 @@ Ikuti prompt dan set env vars saat diminta, atau set via dashboard setelah deplo
 Setelah deploy berhasil:
 
 1. Buka Vercel Dashboard → project → **Cron Jobs** tab
-2. Pastikan cron `/api/cron/sync-emails` muncul dengan schedule `0 */6 * * *` (setiap 6 jam)
+2. Pastikan cron `/api/cron/sync-emails` muncul dengan schedule `0 0 * * *` (sekali sehari, tengah malam UTC — sesuai `vercel.json`)
 3. Klik **Run** untuk tes manual pertama kali
 4. Cek **Function Logs** untuk memastikan tidak ada error
 

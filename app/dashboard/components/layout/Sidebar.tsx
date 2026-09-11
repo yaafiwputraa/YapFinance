@@ -26,7 +26,7 @@ export function Sidebar({
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
             <Command size={16} />
           </div>
-          <h1 className="ml-3 text-xl font-bold text-white tracking-tight">DeepYap.</h1>
+          <h1 className="ml-3 text-xl font-bold text-white tracking-tight">YapBalance</h1>
         </div>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
